@@ -8,7 +8,7 @@ use Drupal\password_enhancements\Entity\PolicyInterface;
 /**
  * Defines required methods for the password policy entity storage.
  */
-interface PasswordPolicyEntityStorageInterface extends ConfigEntityStorageInterface {
+interface PolicyEntityStorageInterface extends ConfigEntityStorageInterface {
 
   /**
    * Loads a password policy entity by role and priority.

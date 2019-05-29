@@ -7,6 +7,6 @@ use Exception;
 /**
  * Password constraint entity storage exception.
  */
-class PasswordConstraintEntityStorageException extends Exception {
+class ConstraintEntityStorageException extends Exception {
 
 }

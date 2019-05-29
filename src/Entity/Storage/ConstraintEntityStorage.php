@@ -15,7 +15,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Entity storage for password constraint config entity.
  */
-class PasswordConstraintEntityStorage extends ConfigEntityStorage implements ConfigEntityStorageInterface {
+class ConstraintEntityStorage extends ConfigEntityStorage implements ConfigEntityStorageInterface {
 
   /**
    * Password constraint plugin manager.
@@ -55,7 +55,7 @@ class PasswordConstraintEntityStorage extends ConfigEntityStorage implements Con
     /** @var \Drupal\password_enhancements\Entity\ConstraintInterface $entity */
     $type = $entity->getType();
     if (empty($type)) {
-      throw new PasswordConstraintEntityStorageException('Plugin type cannot be empty.');
+      throw new ConstraintEntityStorageException('Plugin type cannot be empty.');
     }
 
     $plugin_definition = $this->passwordConstraintPluginManager->getDefinition($type);

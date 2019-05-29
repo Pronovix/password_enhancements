@@ -12,7 +12,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *   label = @Translation("Password constraint"),
  *   label_collection = @Translation("Password constraints"),
  *   handlers = {
- *     "storage" = "Drupal\password_enhancements\Entity\Storage\PasswordConstraintEntityStorage",
+ *     "storage" = "Drupal\password_enhancements\Entity\Storage\ConstraintEntityStorage",
  *     "route_provider" = {
  *       "html" = "Drupal\Core\Entity\Routing\DefaultHtmlRouteProvider",
  *     },

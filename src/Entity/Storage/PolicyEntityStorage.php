@@ -15,12 +15,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Entity storage for password constraint config entity.
  */
-class PasswordPolicyEntityStorage extends ConfigEntityStorage implements PasswordPolicyEntityStorageInterface {
+class PolicyEntityStorage extends ConfigEntityStorage implements PolicyEntityStorageInterface {
 
   /**
    * Password constraint entity storage.
    *
-   * @var \Drupal\password_enhancements\Entity\Storage\PasswordConstraintEntityStorage
+   * @var \Drupal\password_enhancements\Entity\Storage\ConstraintEntityStorage
    */
   protected $constraintEntityStorage;
 

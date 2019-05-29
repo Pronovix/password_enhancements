@@ -12,7 +12,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *   label = @Translation("Password policy"),
  *   label_collection = @Translation("Password policies"),
  *   handlers = {
- *     "storage" = "Drupal\password_enhancements\Entity\Storage\PasswordPolicyEntityStorage",
+ *     "storage" = "Drupal\password_enhancements\Entity\Storage\PolicyEntityStorage",
  *     "route_provider" = {
  *       "html" = "Drupal\Core\Entity\Routing\DefaultHtmlRouteProvider",
  *     },
