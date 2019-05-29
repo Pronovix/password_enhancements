@@ -6,6 +6,7 @@ use Drupal\Core\Config\Entity\ConfigEntityStorageInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\user\RoleStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -47,7 +48,7 @@ class PolicyForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): PolicyForm {
     return new static(
       $container->get('entity_type.manager')->getStorage('password_enhancements_policy'),
       $container->get('entity_type.manager')->getStorage('user_role'),
@@ -58,7 +59,7 @@ class PolicyForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function form(array $form, FormStateInterface $form_state) {
+  public function form(array $form, FormStateInterface $form_state): array {
     $form = parent::form($form, $form_state);
 
     $form['#title'] = $this->t('Edit policy');
@@ -125,7 +126,7 @@ class PolicyForm extends EntityForm {
       '#min' => 0,
       '#states' => [
         'invisible' => [
-          ':input[name="role"]' => ['value' => 'authenticated'],
+          ':input[name="role"]' => ['value' => AccountInterface::AUTHENTICATED_ROLE],
         ],
       ],
     ];
@@ -136,7 +137,7 @@ class PolicyForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     parent::validateForm($form, $form_state);
 
     if ($this->entity->isNew()) {
@@ -152,19 +153,19 @@ class PolicyForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     if (!$form_state->getValue('expire_password')) {
       $form_state->setValue('expireDays', 0);
     }
 
-    if ($form_state->getValue('role') == 'authenticated') {
+    if ($form_state->getValue('role') == AccountInterface::AUTHENTICATED_ROLE) {
       $form_state->setValue('priority', 0);
     }
 
     parent::submitForm($form, $form_state);
 
     $form_state->setRedirect('entity.password_enhancements_policy.collection');
-    $this->messenger->addStatus(t('The %name password policy has been successfully saved.', [
+    $this->messenger->addStatus($this->t('The %name password policy has been successfully saved.', [
       '%name' => $form_state->getValue('name'),
     ]));
   }

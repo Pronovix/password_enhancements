@@ -54,7 +54,7 @@ abstract class MinimumCharacters extends PluginBase implements PasswordConstrain
 
     $form['minimum_characters'] = [
       '#type' => 'number',
-      '#title' => t('Minimum characters'),
+      '#title' => $this->t('Minimum characters'),
       '#required' => TRUE,
       '#min' => 1,
       '#default_value' => !empty($this->configuration['minimum_characters']) ? $this->configuration['minimum_characters'] : 1,

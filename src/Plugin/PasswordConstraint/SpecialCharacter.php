@@ -72,7 +72,7 @@ final class SpecialCharacter extends MinimumCharacters {
       $form_state->setValue(['settings', 'use_custom_special_characters'], 0);
     }
     elseif (preg_match('/[a-z0-9]/i', $form_state->getValue(['settings', 'special_characters']))) {
-      $form_state->setError($form['settings']['special_characters'], t('Alphanumeric characters are not allowed.'));
+      $form_state->setError($form['settings']['special_characters'], $this->t('Alphanumeric characters are not allowed.'));
     }
   }
 

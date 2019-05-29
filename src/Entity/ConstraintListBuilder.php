@@ -40,7 +40,7 @@ class ConstraintListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type): ConstraintListBuilder {
     return new static(
       $entity_type,
       $container->get('entity_type.manager')->getStorage($entity_type->id()),
@@ -52,7 +52,7 @@ class ConstraintListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function load() {
+  public function load(): array {
     return $this->storage->loadByProperties([
       'policy' => $this->currentRequest->get('password_enhancements_policy'),
     ]);
@@ -61,9 +61,9 @@ class ConstraintListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function render() {
+  public function render(): array {
     $build = parent::render();
-    $build['#title'] = t('%name password policy constraints', [
+    $build['#title'] = $this->t('%name password policy constraints', [
       '%name' => $this->policyStorage->load($this->currentRequest->get('password_enhancements_policy'))->getName(),
     ]);
     $build['table']['#empty'] = $this->t('There is no password constraint created yet for this policy.');
@@ -73,7 +73,7 @@ class ConstraintListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function buildHeader() {
+  public function buildHeader(): array {
     $row = [
       'type' => $this->t('Type'),
       'description_singular' => $this->t('Description (singular)'),
@@ -89,7 +89,7 @@ class ConstraintListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function buildRow(EntityInterface $entity) {
+  public function buildRow(EntityInterface $entity): array {
     $settings = '';
     $plugin_settings = $entity->getSettings();
     if (!empty($plugin_settings)) {

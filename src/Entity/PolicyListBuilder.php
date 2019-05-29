@@ -34,7 +34,7 @@ class PolicyListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type): PolicyListBuilder {
     return new static(
       $entity_type,
       $container->get('entity.manager')->getStorage($entity_type->id()),
@@ -45,7 +45,7 @@ class PolicyListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function load() {
+  public function load(): array {
     $entity_ids = $this->getStorage()->getQuery()->sort('priority', 'asc')->execute();
     return $this->storage->loadMultiple($entity_ids);
   }
@@ -53,7 +53,7 @@ class PolicyListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function render() {
+  public function render(): array {
     $build = parent::render();
     $build['table']['#empty'] = $this->t('There is no password policy created yet.');
     return $build;
@@ -62,7 +62,7 @@ class PolicyListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function buildHeader() {
+  public function buildHeader(): array {
     $header = [
       'name' => $this->t('Name'),
       'role' => $this->t('Role'),
@@ -77,7 +77,7 @@ class PolicyListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function buildRow(EntityInterface $entity) {
+  public function buildRow(EntityInterface $entity): array {
     $expire_days = $entity->getExpireDays();
 
     $role = $entity->getRole();

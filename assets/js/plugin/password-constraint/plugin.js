@@ -9,7 +9,7 @@
  * @param {jQuery} field
  *   Constraint field.
  */
-function DpPasswordConstraintPlugin(field) {
+function PasswordEnhancementsConstraintPlugin(field) {
   // Initialize variables.
   this.field = field;
   this.updateEffect = drupalSettings.passwordEnhancementsConstraint.updateEffect;
@@ -18,7 +18,7 @@ function DpPasswordConstraintPlugin(field) {
 /**
  * Marks the constraint field passed.
  */
-DpPasswordConstraintPlugin.prototype.validationPassed = function () {
+PasswordEnhancementsConstraintPlugin.prototype.validationPassed = function () {
   this.field.attr('data-validation-passed', 'yes');
 
   switch (this.updateEffect) {
@@ -35,7 +35,7 @@ DpPasswordConstraintPlugin.prototype.validationPassed = function () {
 /**
  * Marks the constraint field not passed.
  */
-DpPasswordConstraintPlugin.prototype.validationNotPassed = function () {
+PasswordEnhancementsConstraintPlugin.prototype.validationNotPassed = function () {
   this.field.attr('data-validation-passed', 'no');
 
   switch (this.updateEffect) {

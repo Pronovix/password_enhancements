@@ -48,7 +48,7 @@ class ConstraintForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): ConstraintForm {
     return new static(
       $container->get('entity_type.manager')->getStorage('password_enhancements_constraint'),
       $container->get('plugin.manager.password_constraint'),
@@ -59,7 +59,7 @@ class ConstraintForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function form(array $form, FormStateInterface $form_state) {
+  public function form(array $form, FormStateInterface $form_state): array {
     $form = parent::form($form, $form_state);
 
     $form['#title'] = $this->t('Edit constraint');
@@ -117,7 +117,7 @@ class ConstraintForm extends EntityForm {
       $form['wrapper'] = static::updateForm($form, $form_state);
     }
     catch (PluginException $e) {
-      $this->messenger->addError(t('Invalid plugin ID: @error', [
+      $this->messenger->addError($this->t('Invalid plugin ID: @error', [
         '@error' => $e->getMessage(),
       ]));
       watchdog_exception('password_enhancements', $e);
@@ -139,7 +139,7 @@ class ConstraintForm extends EntityForm {
    *
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
-  public function updateForm(array $form, FormStateInterface $form_state) {
+  public function updateForm(array $form, FormStateInterface $form_state): array {
     // Get type if exist.
     if (($type = $this->entity->getType()) === NULL) {
       $type = $form_state->getValue('type');
@@ -186,7 +186,7 @@ class ConstraintForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     $type = $form_state->getValue('type');
 
     if ($this->entity->isNew()) {
@@ -198,7 +198,7 @@ class ConstraintForm extends EntityForm {
           'type' => $type,
         ]);
         if (array_key_exists($type . '.' . $this->getRequest()->get('password_enhancements_policy'), $entities)) {
-          $form_state->setError($form['type'], t('Only one instance can be created from the selected constraint.'));
+          $form_state->setError($form['type'], $this->t('Only one instance can be created from the selected constraint.'));
         }
       }
     }
@@ -215,7 +215,7 @@ class ConstraintForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     // Call plugin's submit callback.
     if (!array_key_exists('empty', $form['wrapper']['settings'])) {
       $plugin_instance = $this->passwordConstraintPluginManager->createInstance($form_state->getValue('type'), $this->entity->getConfiguration());

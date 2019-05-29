@@ -31,11 +31,11 @@
    * Constructs the special_character constraint plugin.
    */
   function SpecialCharacterPlugin(field) {
-    DpPasswordMinimumCharacters.call(this, field);
+    PasswordEnhancementsMinimumCharacters.call(this, field);
   }
 
   // Inherit methods.
-  SpecialCharacterPlugin.prototype = Object.create(DpPasswordMinimumCharacters.prototype);
+  SpecialCharacterPlugin.prototype = Object.create(PasswordEnhancementsMinimumCharacters.prototype);
 
   /**
    * Overrides parent validate method.
@@ -57,7 +57,7 @@
       characters = matches.join('');
     }
 
-    var isValid = DpPasswordMinimumCharacters.prototype.validate.call(this, characters, settings, true);
+    var isValid = PasswordEnhancementsMinimumCharacters.prototype.validate.call(this, characters, settings, true);
 
     // We have to replace the string arguments here because the JS translation
     // API is not aligned with the Drupal backend translation API.

@@ -25,10 +25,10 @@
    * Constructs the minimum_length constraint plugin.
    */
   function MinimumLength(field) {
-    DpPasswordMinimumCharacters.call(this, field);
+    PasswordEnhancementsMinimumCharacters.call(this, field);
   }
 
   // Inherit methods.
-  MinimumLength.prototype = Object.create(DpPasswordMinimumCharacters.prototype);
+  MinimumLength.prototype = Object.create(PasswordEnhancementsMinimumCharacters.prototype);
 
 })(jQuery);

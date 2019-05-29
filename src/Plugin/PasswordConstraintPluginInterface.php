@@ -78,6 +78,6 @@ interface PasswordConstraintPluginInterface {
    * @return bool
    *   Returns TRUE if the constraint passes, error message otherwise.
    */
-  public function validate(string $value);
+  public function validate(string $value): bool;
 
 }

@@ -66,7 +66,7 @@ class Init implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[KernelEvents::REQUEST][] = ['userForceLogout', 100];
     return $events;
   }
@@ -77,7 +77,7 @@ class Init implements EventSubscriberInterface {
    * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
    *   Response event.
    */
-  public function userForceLogout(GetResponseEvent $event) {
+  public function userForceLogout(GetResponseEvent $event): void {
     // This session variable is set only if the user just logged in, in that
     // case don't force the user logout, but let changing the password.
     $password_change_required = $this->sessionManager->getBag('attributes')->getBag()->get('password_enhancements_password_change_required');

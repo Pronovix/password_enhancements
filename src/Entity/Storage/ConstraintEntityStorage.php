@@ -36,7 +36,7 @@ class ConstraintEntityStorage extends ConfigEntityStorage implements ConfigEntit
   /**
    * {@inheritdoc}
    */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type): ConfigEntityStorageInterface {
     return new static(
       $entity_type,
       $container->get('config.factory'),
@@ -49,7 +49,7 @@ class ConstraintEntityStorage extends ConfigEntityStorage implements ConfigEntit
   /**
    * {@inheritdoc}
    */
-  public function save(EntityInterface $entity) {
+  public function save(EntityInterface $entity): int {
     // Generate new ID for the entity based on the uniqueness of the selected
     // plugin.
     /** @var \Drupal\password_enhancements\Entity\ConstraintInterface $entity */

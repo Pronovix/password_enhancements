@@ -59,7 +59,7 @@ class NavigationLock implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[KernelEvents::REQUEST][] = ['onKernelRequestLockNavigation', 33];
     return $events;
   }
@@ -70,7 +70,7 @@ class NavigationLock implements EventSubscriberInterface {
    * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
    *   Response event.
    */
-  public function onKernelRequestLockNavigation(GetResponseEvent $event) {
+  public function onKernelRequestLockNavigation(GetResponseEvent $event): void {
     /** @var \Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface $attributes_bag */
     $attributes_bag = $this->sessionManager->getBag('attributes')->getBag();
     $password_change_required = $attributes_bag->get('password_enhancements_password_change_required');

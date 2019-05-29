@@ -66,7 +66,7 @@ class PasswordChange extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): PasswordChange {
     $user_id = $container->get('current_user')->id();
     return new static(
       $container->get('datetime.time'),
@@ -79,14 +79,14 @@ class PasswordChange extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'password_enhancements_change_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     // Get user roles.
     $roles = $this->user->getRoles();
     $form_state->setValue('roles', $roles);
@@ -107,7 +107,7 @@ class PasswordChange extends FormBase {
       ],
       'current_pass' => [
         '#type' => 'password',
-        '#title' => t('Current password'),
+        '#title' => $this->t('Current password'),
         '#required' => TRUE,
         '#attributes' => ['autocomplete' => 'off'],
         '#access' => !$user_pass_reset,
@@ -133,7 +133,7 @@ class PasswordChange extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     parent::validateForm($form, $form_state);
 
     if (!$form_state->get('user_pass_reset') && !$this->password->check($form_state->getValue('current_pass'), $this->user->getPassword())) {
@@ -144,7 +144,7 @@ class PasswordChange extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     // Remove lock and clean-up session variables.
     $attributes_bag = $this->sessionManager->getBag('attributes')->getBag();
     $attributes_bag->remove('password_enhancements_password_change_required');
@@ -156,7 +156,7 @@ class PasswordChange extends FormBase {
       ->setPassword($form_state->getValue('pass'))
       ->save();
 
-    $this->messenger()->addStatus(t('Your password has been successfully changed.'));
+    $this->messenger()->addStatus($this->t('Your password has been successfully changed.'));
     $form_state->setRedirect('user.page');
   }
 

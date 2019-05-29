@@ -41,7 +41,7 @@ class EntityBreadcrumbBuilder extends PathBasedBreadcrumbBuilder {
   /**
    * {@inheritdoc}
    */
-  public function applies(RouteMatchInterface $route_match) {
+  public function applies(RouteMatchInterface $route_match): bool {
     $parameters = $route_match->getParameters()->all();
     if (array_key_exists('password_enhancements_policy', $parameters)) {
       return TRUE;
@@ -52,7 +52,7 @@ class EntityBreadcrumbBuilder extends PathBasedBreadcrumbBuilder {
   /**
    * {@inheritdoc}
    */
-  public function build(RouteMatchInterface $route_match) {
+  public function build(RouteMatchInterface $route_match): Breadcrumb {
     $original_breadcrumb = parent::build($route_match);
     $links = $original_breadcrumb->getLinks();
 

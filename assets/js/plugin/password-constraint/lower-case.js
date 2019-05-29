@@ -27,11 +27,11 @@
    * Constructs the lower-case constraint plugin.
    */
   function LowerCase(field) {
-    DpPasswordMinimumCharacters.call(this, field);
+    PasswordEnhancementsMinimumCharacters.call(this, field);
   }
 
   // Inherit methods.
-  LowerCase.prototype = Object.create(DpPasswordMinimumCharacters.prototype);
+  LowerCase.prototype = Object.create(PasswordEnhancementsMinimumCharacters.prototype);
 
   /**
    * Overrides parent validate method.
@@ -44,7 +44,7 @@
       characters = matches.join('');
     }
 
-    return DpPasswordMinimumCharacters.prototype.validate.call(this, characters, settings);
+    return PasswordEnhancementsMinimumCharacters.prototype.validate.call(this, characters, settings);
   };
 
 })(jQuery);

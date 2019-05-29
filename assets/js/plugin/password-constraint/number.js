@@ -25,11 +25,11 @@
    * Constructs the number constraint plugin.
    */
   function NumberPlugin(field) {
-    DpPasswordMinimumCharacters.call(this, field);
+    PasswordEnhancementsMinimumCharacters.call(this, field);
   }
 
   // Inherit methods.
-  NumberPlugin.prototype = Object.create(DpPasswordMinimumCharacters.prototype);
+  NumberPlugin.prototype = Object.create(PasswordEnhancementsMinimumCharacters.prototype);
 
   /**
    * Overrides parent validate method.
@@ -42,7 +42,7 @@
       characters = matches.join('');
     }
 
-    return DpPasswordMinimumCharacters.prototype.validate.call(this, characters, settings);
+    return PasswordEnhancementsMinimumCharacters.prototype.validate.call(this, characters, settings);
   };
 
 })(jQuery);

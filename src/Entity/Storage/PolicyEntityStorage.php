@@ -36,7 +36,7 @@ class PolicyEntityStorage extends ConfigEntityStorage implements PolicyEntitySto
   /**
    * {@inheritdoc}
    */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type): PolicyEntityStorageInterface {
     return new static(
       $entity_type,
       $container->get('config.factory'),
@@ -49,7 +49,7 @@ class PolicyEntityStorage extends ConfigEntityStorage implements PolicyEntitySto
   /**
    * {@inheritdoc}
    */
-  public function doDelete($entities) {
+  public function doDelete($entities): void {
     // Remove any related constraints as well.
     foreach ($entities as $entity) {
       $constraints = $this->constraintEntityStorage->loadByProperties([
@@ -76,7 +76,7 @@ class PolicyEntityStorage extends ConfigEntityStorage implements PolicyEntitySto
    * @return string[]
    *   List of entity IDs.
    */
-  protected function getEntityIdsByRoleAndPriority(array $roles, string $order) {
+  protected function getEntityIdsByRoleAndPriority(array $roles, string $order): array {
     $query = $this->getQuery()
       ->sort('priority', $order);
 
@@ -106,7 +106,7 @@ class PolicyEntityStorage extends ConfigEntityStorage implements PolicyEntitySto
   /**
    * {@inheritdoc}
    */
-  public function save(EntityInterface $entity) {
+  public function save(EntityInterface $entity): int {
     // Generate ID automatically for the entity.
     $entity->id = $entity->getRole();
 

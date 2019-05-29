@@ -9,14 +9,14 @@
  * @param {jQuery} field
  *   Constraint field.
  */
-function DpPasswordMinimumCharacters(field) {
-  DpPasswordConstraintPlugin.call(this, field);
+function PasswordEnhancementsMinimumCharacters(field) {
+  PasswordEnhancementsConstraintPlugin.call(this, field);
 
   this.settingName = 'minimum_characters';
 }
 
 // Inherit methods.
-DpPasswordMinimumCharacters.prototype = Object.create(DpPasswordConstraintPlugin.prototype);
+PasswordEnhancementsMinimumCharacters.prototype = Object.create(PasswordEnhancementsConstraintPlugin.prototype);
 
 /**
  * Plugin's validation callback.
@@ -31,7 +31,7 @@ DpPasswordMinimumCharacters.prototype = Object.create(DpPasswordConstraintPlugin
  * @return {boolean}
  *   TRUE if the validation is valid, FALSE otherwise.
  */
-DpPasswordMinimumCharacters.prototype.validate = function (value, settings, customMessage) {
+PasswordEnhancementsMinimumCharacters.prototype.validate = function (value, settings, customMessage) {
   if (typeof customMessage === 'undefined') {
     customMessage = false;
   }

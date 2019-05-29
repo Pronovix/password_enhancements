@@ -50,7 +50,7 @@ class Settings extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): Settings {
     return new static(
       $container->get('config.factory'),
       $container->get('entity_type.manager')->getStorage('password_enhancements_constraint'),
@@ -61,14 +61,14 @@ class Settings extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'password_enhancements_settings';
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getEditableConfigNames() {
+  protected function getEditableConfigNames(): array {
     return [
       'password_enhancements.settings',
     ];
@@ -77,9 +77,9 @@ class Settings extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     if ($this->config('user.settings')->get('password_strength')) {
-      $this->messenger->addWarning(t('The core <a href="@url" target="_blank">password strength indicator</a> is enabled, it is recommended to disable it.', [
+      $this->messenger->addWarning($this->t('The core <a href="@url" target="_blank">password strength indicator</a> is enabled, it is recommended to disable it.', [
         '@url' => Url::fromRoute('entity.user.admin_form', [], [
           'fragment' => 'edit-user-password-strength',
         ])->toString(),
@@ -91,7 +91,7 @@ class Settings extends ConfigFormBase {
     $form['constraint_update_effect'] = [
       '#type' => 'select',
       '#title' => $this->t('Constraint update effect'),
-      '#description' => t('Sets the update effect for password constraint completion.'),
+      '#description' => $this->t('Sets the update effect for password constraint completion.'),
       '#options' => [
         static::CONSTRAINT_EFFECT_STRIKETHROUGH => $this->t('Strike-through'),
         static::CONSTRAINT_EFFECT_HIDE => $this->t('Hide'),
@@ -119,7 +119,7 @@ class Settings extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $this->config('password_enhancements.settings')
       ->set('constraint_update_effect', $form_state->getValue('constraint_update_effect'))
       ->set('require_password', $form_state->getValue('require_password'))
