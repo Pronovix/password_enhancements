@@ -93,9 +93,9 @@ abstract class MinimumCharacters extends PluginBase implements PasswordConstrain
 
     if (!$custom_error_message) {
       $count = $this->configuration['minimum_characters'] - $character_count;
-      $this->errorMessage = $this->formatPlural($count, $this->configuration['descriptionSingular'], $this->configuration['descriptionPlural'], [
+      $this->errorMessage = $count > 1 ? strtr($this->configuration['descriptionPlural'], [
         '@minimum_characters' => $count,
-      ]);
+      ]) : $this->configuration['descriptionSingular'];
     }
     return FALSE;
   }

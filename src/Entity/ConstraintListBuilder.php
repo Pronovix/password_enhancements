@@ -22,18 +22,10 @@ class ConstraintListBuilder extends EntityListBuilder {
   protected $currentRequest;
 
   /**
-   * Password policy entity storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $policyStorage;
-
-  /**
    * {@inheritdoc}
    */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, EntityStorageInterface $policy_storage, Request $request) {
+  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, Request $request) {
     parent::__construct($entity_type, $storage);
-    $this->policyStorage = $policy_storage;
     $this->currentRequest = $request;
   }
 
@@ -44,7 +36,6 @@ class ConstraintListBuilder extends EntityListBuilder {
     return new static(
       $entity_type,
       $container->get('entity_type.manager')->getStorage($entity_type->id()),
-      $container->get('entity_type.manager')->getStorage('password_enhancements_policy'),
       $container->get('request_stack')->getCurrentRequest()
     );
   }
@@ -54,7 +45,7 @@ class ConstraintListBuilder extends EntityListBuilder {
    */
   public function load(): array {
     return $this->storage->loadByProperties([
-      'policy' => $this->currentRequest->get('password_enhancements_policy'),
+      'policy' => $this->currentRequest->get('password_enhancements_policy')->id(),
     ]);
   }
 
@@ -64,7 +55,7 @@ class ConstraintListBuilder extends EntityListBuilder {
   public function render(): array {
     $build = parent::render();
     $build['#title'] = $this->t('%name password policy constraints', [
-      '%name' => $this->policyStorage->load($this->currentRequest->get('password_enhancements_policy'))->getName(),
+      '%name' => $this->currentRequest->get('password_enhancements_policy')->getName(),
     ]);
     $build['table']['#empty'] = $this->t('There is no password constraint created yet for this policy.');
     return $build;

@@ -92,10 +92,10 @@ final class SpecialCharacter extends MinimumCharacters {
 
     if (!$is_valid && $this->configuration['use_custom_special_characters']) {
       $count = $this->configuration['minimum_characters'] - mb_strlen($result);
-      $this->errorMessage = $this->formatPlural($count, $this->configuration['descriptionSingular'], $this->configuration['descriptionPlural'], [
+      $this->errorMessage = $count > 1 ? strtr($this->configuration['descriptionPlural'], [
         '@minimum_characters' => $count,
         '@special_characters' => $this->configuration['special_characters'],
-      ]);
+      ]) : $this->configuration['descriptionSingular'];
     }
 
     return $is_valid;

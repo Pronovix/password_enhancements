@@ -58,13 +58,9 @@ PasswordEnhancementsMinimumCharacters.prototype.validate = function (value, sett
 
     // Update message if needed.
     if (!customMessage) {
-      // We have to replace the string arguments here because the JS translation
-      // API is not aligned with the Drupal backend translation API.
-      var descriptionSingular = settings['descriptionSingular'].replace('@minimum_characters', '!minimum_characters');
-      var descriptionPlural = settings['descriptionPlural'].replace('@minimum_characters', '!minimum_characters');
-      var message = Drupal.formatPlural(characterNumber < 1 ? 1 : characterNumber, descriptionSingular, descriptionPlural, {
-        '!minimum_characters': '<span data-setting="minimum_characters">' + characterNumber + '</span>'
-      });
+      var message = characterNumber > 1
+        ? settings['descriptionPlural'].replace('@minimum_characters', '<span data-setting="minimum_characters">' + characterNumber + '</span>')
+        : settings['descriptionSingular'];
 
       if (this.field.html() !== message) {
         this.field.html(message);

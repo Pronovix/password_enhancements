@@ -98,6 +98,13 @@ class Policy extends ConfigEntityBase implements PolicyInterface {
   /**
    * {@inheritdoc}
    */
+  public function label() {
+    return $this->getName();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getName(): ?string {
     return $this->name;
   }

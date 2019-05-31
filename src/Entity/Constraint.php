@@ -14,7 +14,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *   handlers = {
  *     "storage" = "Drupal\password_enhancements\Entity\Storage\ConstraintEntityStorage",
  *     "route_provider" = {
- *       "html" = "Drupal\Core\Entity\Routing\DefaultHtmlRouteProvider",
+ *       "html" = "Drupal\password_enhancements\Entity\Routing\ConstraintHtmlRouteProvider",
  *     },
  *     "form" = {
  *       "default" = "Drupal\password_enhancements\Form\ConstraintForm",
@@ -111,6 +111,13 @@ class Constraint extends ConfigEntityBase implements ConstraintInterface {
    */
   public function getDescriptionPlural(): ?string {
     return $this->descriptionPlural;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function label() {
+    return $this->getType() . ' (' . $this->getPolicy() . ')';
   }
 
   /**

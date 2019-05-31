@@ -42,7 +42,7 @@
    */
   SpecialCharacterPlugin.prototype.validate = function (value, settings) {
     var regex;
-    if (settings.hasOwnProperty('use_custom_special_characters') && settings['use_custom_special_characters']) {
+    if (settings.hasOwnProperty('use_custom_special_characters') && settings['use_custom_special_characters'] === 1) {
       var specialCharacters = settings['special_characters'].replace(/[-[\]{}()*+!<=:?.\/\\^$|#\s,]/g, '\\$&');
       regex = new RegExp('([' + specialCharacters + '])', 'g')
     }
@@ -59,17 +59,14 @@
 
     var isValid = PasswordEnhancementsMinimumCharacters.prototype.validate.call(this, characters, settings, true);
 
-    // We have to replace the string arguments here because the JS translation
-    // API is not aligned with the Drupal backend translation API.
-    var descriptionSingular = settings['descriptionSingular'].replace('@minimum_characters', '!minimum_characters')
-      .replace('@special_characters', '!special_characters');
-    var descriptionPlural = settings['descriptionPlural'].replace('@minimum_characters', '!minimum_characters')
-      .replace('@special_characters', '!special_characters');
     var characterNumber = settings[this.settingName] - value.length;
-    var message = Drupal.formatPlural(characterNumber < 1 ? 1 : characterNumber, descriptionSingular, descriptionPlural, {
-      '!minimum_characters': '<span data-setting="minimum_characters">' + characterNumber + '</span>',
-      '!special_characters': '<span data-setting="special_characters">' + settings['special_characters'] + '</span>'
-    });
+    var specialCharactersMarkup = '<span data-setting="special_characters">' + settings['special_characters'] + '</span>';
+    var message = characterNumber > 1
+      ? settings['descriptionPlural']
+        .replace('@minimum_characters', '<span data-setting="minimum_characters">' + characterNumber + '</span>')
+        .replace('@special_characters', specialCharactersMarkup)
+      : settings['descriptionSingular']
+        .replace('@special_characters', specialCharactersMarkup);
 
     if (this.field.html() !== message) {
       this.field.html(message);

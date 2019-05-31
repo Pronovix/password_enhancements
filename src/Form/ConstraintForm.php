@@ -71,7 +71,7 @@ class ConstraintForm extends EntityForm {
 
     $form['policy'] = [
       '#type' => 'hidden',
-      '#value' => $this->getRequest()->get('password_enhancements_policy'),
+      '#value' => $this->getRequest()->get('password_enhancements_policy')->id(),
     ];
 
     $settings_wrapper_id = 'ajax-wrapper';
@@ -197,7 +197,7 @@ class ConstraintForm extends EntityForm {
         $entities = $this->constraintConfigEntityStorage->loadByProperties([
           'type' => $type,
         ]);
-        if (array_key_exists($type . '.' . $this->getRequest()->get('password_enhancements_policy'), $entities)) {
+        if (array_key_exists($type . '.' . $this->getRequest()->get('password_enhancements_policy')->id(), $entities)) {
           $form_state->setError($form['type'], $this->t('Only one instance can be created from the selected constraint.'));
         }
       }
@@ -226,7 +226,7 @@ class ConstraintForm extends EntityForm {
 
     $this->messenger->addStatus('The password constraint was successfully saved.');
     $form_state->setRedirect('entity.password_enhancements_constraint.collection', [
-      'password_enhancements_policy' => $this->getRequest()->get('password_enhancements_policy'),
+      'password_enhancements_policy' => $this->getRequest()->get('password_enhancements_policy')->id(),
     ]);
   }
 
