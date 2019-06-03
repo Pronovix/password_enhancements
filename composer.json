@@ -5,12 +5,6 @@
     "description": "Password related enhancements.",
     "keywords": ["Drupal", "password", "enhancements", "security"],
     "license": "GPL-2.0-or-later",
-    "authors": [
-        {
-            "name": "Tamás NAGY",
-            "homepage": "https://github.com/tamas-nagy-px"
-        }
-    ],
     "support": {
         "issues": "https://github.com/Pronovix/password_enhancements/issues",
         "source": "https://github.com/Pronovix/password_enhancements"

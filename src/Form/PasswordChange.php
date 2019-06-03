@@ -26,7 +26,7 @@ class PasswordChange extends FormBase {
   /**
    * Current user.
    *
-   * @var \Drupal\Core\Session\AccountProxyInterface
+   * @var \Drupal\user\UserInterface
    */
   protected $user;
 

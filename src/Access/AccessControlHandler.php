@@ -4,13 +4,15 @@ namespace Drupal\password_enhancements\Access;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\SessionManagerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines access checks for the password_enhancements module.
  */
-class AccessControlHandler implements AccessControlHandlerInterface {
+class AccessControlHandler implements AccessControlHandlerInterface, ContainerInjectionInterface {
 
   /**
    * Session manager.
@@ -27,6 +29,15 @@ class AccessControlHandler implements AccessControlHandlerInterface {
    */
   public function __construct(SessionManagerInterface $session_manager) {
     $this->sessionManager = $session_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('session_manager')
+    );
   }
 
   /**

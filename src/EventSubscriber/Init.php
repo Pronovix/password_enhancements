@@ -3,10 +3,8 @@
 namespace Drupal\password_enhancements\EventSubscriber;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Session\SessionManagerInterface;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\password_enhancements\Controller\UserLogoutController;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -19,15 +17,6 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 class Init implements EventSubscriberInterface {
 
-  use StringTranslationTrait;
-
-  /**
-   * Messenger.
-   *
-   * @var \Drupal\Core\Messenger\MessengerInterface
-   */
-  protected $messenger;
-
   /**
    * Session manager.
    *
@@ -38,7 +27,7 @@ class Init implements EventSubscriberInterface {
   /**
    * The current user.
    *
-   * @var \Drupal\user\Entity\User
+   * @var \Drupal\user\UserInterface
    */
   protected $user;
 
@@ -49,16 +38,13 @@ class Init implements EventSubscriberInterface {
    *   The current user.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   Entity type manager.
-   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-   *   Messenger.
    * @param \Drupal\Core\Session\SessionManagerInterface $session_manager
    *   Session manager.
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(AccountProxyInterface $account, EntityTypeManagerInterface $entity_type_manager, MessengerInterface $messenger, SessionManagerInterface $session_manager) {
-    $this->messenger = $messenger;
+  public function __construct(AccountProxyInterface $account, EntityTypeManagerInterface $entity_type_manager, SessionManagerInterface $session_manager) {
     $this->sessionManager = $session_manager;
     $this->user = $entity_type_manager->getStorage('user')->load($account->id());
   }
