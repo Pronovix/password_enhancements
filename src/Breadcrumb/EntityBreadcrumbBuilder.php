@@ -43,7 +43,7 @@ class EntityBreadcrumbBuilder extends PathBasedBreadcrumbBuilder {
    */
   public function applies(RouteMatchInterface $route_match): bool {
     $parameters = $route_match->getParameters()->all();
-    if (array_key_exists('password_enhancements_policy', $parameters)) {
+    if (array_key_exists('password_enhancements_policy', $parameters) || (array_key_exists('entity_type_id', $parameters) && $parameters['entity_type_id'] === 'password_enhancements_policy')) {
       return TRUE;
     }
     return FALSE;
@@ -64,6 +64,9 @@ class EntityBreadcrumbBuilder extends PathBasedBreadcrumbBuilder {
       ->addCacheTags($original_breadcrumb->getCacheTags())
       ->mergeCacheMaxAge($original_breadcrumb->getCacheMaxAge());
 
+    // Add custom cache context.
+    $breadcrumb->addCacheContexts(['url.path']);
+
     // Edit form's link.
     foreach ($links as $index => $link) {
       if (in_array($link->getUrl()->getRouteName(), ['entity.password_enhancements_policy.edit_form', 'entity.password_enhancements_constraint.edit_form'])) {
@@ -83,19 +86,25 @@ class EntityBreadcrumbBuilder extends PathBasedBreadcrumbBuilder {
 
     $password_constraint = $route_match->getParameter('password_enhancements_constraint');
     if (!empty($password_constraint) && $route_match->getRouteName() != 'entity.password_enhancements_constraint.collection') {
-      $links[] = Link::createFromRoute($password_policy->getName(), 'entity.password_enhancements_constraint.collection', [
+      // Get role storage.
+      $role_storage = $this->entityTypeManager->getStorage('user_role');
+
+      $links[] = Link::createFromRoute($role_storage->load($password_policy->getRole())->label(), 'entity.password_enhancements_constraint.collection', [
         'password_enhancements_policy' => $password_policy->id(),
       ]);
 
-      if ($route_match->getRouteName() == 'entity.password_enhancements_constraint.delete_form') {
+      if ($route_match->getRouteName() === 'entity.password_enhancements_constraint.delete_form') {
         $links[] = Link::createFromRoute($password_constraint->getType(), 'entity.password_enhancements_constraint.edit_form', [
           'password_enhancements_policy' => $password_policy->id(),
           'password_enhancements_constraint' => $password_constraint->id(),
         ]);
       }
     }
-    elseif ($route_match->getRouteName() == 'entity.password_enhancements_policy.delete_form') {
-      $links[] = Link::createFromRoute($password_policy->getName(), 'entity.password_enhancements_policy.edit_form', [
+    elseif ($route_match->getRouteName() === 'entity.password_enhancements_policy.delete_form') {
+      // Get role storage.
+      $role_storage = $this->entityTypeManager->getStorage('user_role');
+
+      $links[] = Link::createFromRoute($role_storage->load($password_policy->getRole())->label(), 'entity.password_enhancements_policy.edit_form', [
         'password_enhancements_policy' => $password_policy->id(),
       ]);
     }

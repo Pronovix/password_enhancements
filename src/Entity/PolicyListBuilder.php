@@ -4,9 +4,9 @@ namespace Drupal\password_enhancements\Entity;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Url;
+use Drupal\password_enhancements\Entity\Storage\PolicyEntityStorageInterface;
 use Drupal\user\RoleStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -25,7 +25,7 @@ class PolicyListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, RoleStorageInterface $role_storage) {
+  public function __construct(EntityTypeInterface $entity_type, PolicyEntityStorageInterface $storage, RoleStorageInterface $role_storage) {
     parent::__construct($entity_type, $storage);
 
     $this->roleStorage = $role_storage;
@@ -46,7 +46,7 @@ class PolicyListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function load(): array {
-    $entity_ids = $this->getStorage()->getQuery()->sort('priority', 'asc')->execute();
+    $entity_ids = $this->storage->getQuery()->sort('priority', 'asc')->execute();
     return $this->storage->loadMultiple($entity_ids);
   }
 
@@ -55,7 +55,7 @@ class PolicyListBuilder extends EntityListBuilder {
    */
   public function render(): array {
     $build = parent::render();
-    $build['table']['#empty'] = $this->t('There is no password policy created yet.');
+    $build['table']['#empty'] = $this->t('There is no policy created yet.');
     return $build;
   }
 
@@ -64,8 +64,7 @@ class PolicyListBuilder extends EntityListBuilder {
    */
   public function buildHeader(): array {
     $header = [
-      'name' => $this->t('Name'),
-      'role' => $this->t('Role'),
+      'policy' => $this->t('Policy'),
       'minimum_required_constraints' => $this->t('Minimum required constraints'),
       'expire_days' => $this->t('Password expiry'),
       'priority' => $this->t('Priority'),
@@ -77,24 +76,30 @@ class PolicyListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
+  public function getDefaultOperations(EntityInterface $entity) {
+    $operations = parent::getDefaultOperations($entity);
+    $operations['manage_constraints'] = [
+      'type' => 'link',
+      'title' => $this->t('Manage constraints'),
+      'url' => Url::fromRoute('entity.password_enhancements_constraint.collection', [
+        'password_enhancements_policy' => $entity->id(),
+      ]),
+      '#weight' => -100,
+    ];
+    return $operations;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildRow(EntityInterface $entity): array {
+    /** @var \Drupal\password_enhancements\Entity\PolicyInterface $entity */
     $expire_days = $entity->getExpireDays();
 
-    $role = $entity->getRole();
-
     $row = [
-      'name' => [
-        'data' => [
-          '#type' => 'link',
-          '#title' => $entity->getName(),
-          '#url' => Url::fromRoute('entity.password_enhancements_constraint.collection', [
-            'password_enhancements_policy' => $entity->id(),
-          ]),
-        ],
-      ],
-      'role' => $this->roleStorage->load($role)->label(),
+      'policy' => $this->roleStorage->load($entity->getRole())->label(),
       'minimum_required_constraints' => $entity->getMinimumRequiredConstraints(),
-      'expire' => $expire_days > 0 ? $this->formatPlural($expire_days, 'after 1 day', 'after @count days') : $this->t('not set'),
+      'expire' => $expire_days > 0 ? $this->formatPlural($expire_days, 'after 1 day', 'after @count days') : $this->t('never expires'),
       'priority' => $entity->getPriority(),
     ];
 

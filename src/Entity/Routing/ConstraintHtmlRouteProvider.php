@@ -55,11 +55,11 @@ class ConstraintHtmlRouteProvider extends DefaultHtmlRouteProvider {
    */
   protected function addPolicyOption(?Route $route) {
     if (!empty($route)) {
-      $route->setOption('parameters', ($route->getOption('parameters') ?? []) + [
+      $route->setOption('parameters', array_merge_recursive($route->getOption('parameters') ?? [], [
         'password_enhancements_policy' => [
           'type' => 'entity:password_enhancements_policy',
         ],
-      ]);
+      ]));
     }
   }
 

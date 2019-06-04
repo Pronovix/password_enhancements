@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\password_enhancements_translation_helper\ConfigTranslation;
+namespace Drupal\password_enhancements\ConfigTranslation;
 
 use Drupal\config_translation\ConfigEntityMapper;
 

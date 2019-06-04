@@ -23,7 +23,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "list_builder" = "Drupal\password_enhancements\Entity\ConstraintListBuilder",
  *   },
  *   config_prefix = "constraint",
- *   admin_permission = "administer user password settings",
+ *   admin_permission = "administer user password enhancements settings",
  *   entity_keys = {
  *     "id" = "id",
  *   },
@@ -38,10 +38,10 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "settings",
  *   },
  *   links = {
- *     "collection" = "/admin/config/people/password/policy/{password_enhancements_policy}/constraints",
- *     "add-form" = "/admin/config/people/password/policy/{password_enhancements_policy}/constraint/add",
- *     "edit-form" = "/admin/config/people/password/policy/{password_enhancements_policy}/constraint/{password_enhancements_constraint}",
- *     "delete-form" = "/admin/config/people/password/policy/{password_enhancements_policy}/constraint/{password_enhancements_constraint}/delete",
+ *     "collection" = "/admin/config/people/password-enhancements/policy/{password_enhancements_policy}/constraints",
+ *     "add-form" = "/admin/config/people/password-enhancements/policy/{password_enhancements_policy}/constraint/add",
+ *     "edit-form" = "/admin/config/people/password-enhancements/policy/{password_enhancements_policy}/constraint/{password_enhancements_constraint}",
+ *     "delete-form" = "/admin/config/people/password-enhancements/policy/{password_enhancements_policy}/constraint/{password_enhancements_constraint}/delete",
  *   }
  * )
  */
@@ -52,14 +52,14 @@ class Constraint extends ConfigEntityBase implements ConstraintInterface {
    *
    * @var string
    */
-  public $descriptionSingular;
+  protected $descriptionSingular;
 
   /**
    * Plural description for the password field.
    *
    * @var string
    */
-  public $descriptionPlural;
+  protected $descriptionPlural;
 
   /**
    * Entity ID.
@@ -73,28 +73,42 @@ class Constraint extends ConfigEntityBase implements ConstraintInterface {
    *
    * @var string
    */
-  public $policy;
+  protected $policy;
 
   /**
    * Whether the constraint is required or can be marked as optional.
    *
    * @var bool
    */
-  public $required;
+  protected $required;
 
   /**
    * Extra settings for the constraint.
    *
    * @var string[]
    */
-  public $settings;
+  protected $settings;
 
   /**
    * The type of the password constraint plugin.
    *
    * @var string
    */
-  public $type;
+  protected $type;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $values, $entity_type) {
+    $this->descriptionSingular = '';
+    $this->descriptionPlural = '';
+    $this->policy = '';
+    $this->required = FALSE;
+    $this->settings = [];
+    $this->type = '';
+
+    parent::__construct($values, $entity_type);
+  }
 
   /**
    * {@inheritdoc}
@@ -109,14 +123,14 @@ class Constraint extends ConfigEntityBase implements ConstraintInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDescriptionSingular(): ?string {
+  public function getDescriptionSingular(): string {
     return $this->descriptionSingular;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getDescriptionPlural(): ?string {
+  public function getDescriptionPlural(): string {
     return $this->descriptionPlural;
   }
 
@@ -124,13 +138,13 @@ class Constraint extends ConfigEntityBase implements ConstraintInterface {
    * {@inheritdoc}
    */
   public function label() {
-    return $this->getType() . ' (' . $this->getPolicy() . ')';
+    return $this->id();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getPolicy(): ?string {
+  public function getPolicy(): string {
     return $this->policy;
   }
 
@@ -151,7 +165,7 @@ class Constraint extends ConfigEntityBase implements ConstraintInterface {
   /**
    * {@inheritdoc}
    */
-  public function getType(): ?string {
+  public function getType(): string {
     return $this->type;
   }
 
@@ -159,7 +173,7 @@ class Constraint extends ConfigEntityBase implements ConstraintInterface {
    * {@inheritdoc}
    */
   public function isRequired(): bool {
-    return $this->required ?? FALSE;
+    return $this->required;
   }
 
   /**

@@ -32,8 +32,8 @@ final class LowerCase extends MinimumCharacters {
   /**
    * {@inheritdoc}
    */
-  public function validate(string $value): bool {
-    return parent::validate(preg_replace('/([^a-z])/', '', $value));
+  public function validate(string $value): void {
+    parent::validate(preg_replace('/([^a-z])/', '', $value));
   }
 
 }

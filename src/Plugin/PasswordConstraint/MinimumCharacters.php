@@ -4,35 +4,13 @@ namespace Drupal\password_enhancements\Plugin\PasswordConstraint;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginBase;
+use Drupal\password_enhancements\Plugin\Exception\PasswordConstraintPluginValidationException;
 use Drupal\password_enhancements\Plugin\PasswordConstraintPluginInterface;
 
 /**
  * Defines a common class for minimum character requirement.
  */
 abstract class MinimumCharacters extends PluginBase implements PasswordConstraintPluginInterface {
-
-  /**
-   * The generated error message.
-   *
-   * @var string
-   */
-  protected $errorMessage;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->errorMessage = NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getErrorMessage(): ?string {
-    return $this->errorMessage;
-  }
 
   /**
    * {@inheritdoc}
@@ -77,27 +55,22 @@ abstract class MinimumCharacters extends PluginBase implements PasswordConstrain
   /**
    * {@inheritdoc}
    */
-  public function settingsSubmit(array &$form, FormStateInterface $form_state): void {
-    // Nothing to do here.
+  public function validate(string $value): void {
+    $character_count = mb_strlen($value);
+    if ($this->configuration['minimum_characters'] > $character_count) {
+      $count = $this->configuration['minimum_characters'] - $character_count;
+      $message = $count > 1 ? strtr($this->configuration['descriptionPlural'], [
+        '@minimum_characters' => $count,
+      ]) : $this->configuration['descriptionSingular'];
+      throw new PasswordConstraintPluginValidationException($message);
+    }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function validate(string $value, bool $custom_error_message = FALSE): bool {
-    $character_count = mb_strlen($value);
-    if ($this->configuration['minimum_characters'] <= $character_count) {
-      $this->errorMessage = NULL;
-      return TRUE;
-    }
-
-    if (!$custom_error_message) {
-      $count = $this->configuration['minimum_characters'] - $character_count;
-      $this->errorMessage = $count > 1 ? strtr($this->configuration['descriptionPlural'], [
-        '@minimum_characters' => $count,
-      ]) : $this->configuration['descriptionSingular'];
-    }
-    return FALSE;
+  public function settingsSubmit(array &$form, FormStateInterface $form_state): void {
+    // Nothing to do here.
   }
 
 }

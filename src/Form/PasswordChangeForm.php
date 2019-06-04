@@ -6,15 +6,18 @@ use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Password\PasswordInterface;
 use Drupal\Core\Session\SessionManagerInterface;
 use Drupal\user\UserInterface;
+use Drupal\user\UserStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Password change form.
  */
-class PasswordChange extends FormBase {
+class PasswordChangeForm extends FormBase {
 
   /**
    * Date time.
@@ -22,13 +25,6 @@ class PasswordChange extends FormBase {
    * @var \Drupal\Component\Datetime\TimeInterface
    */
   protected $dateTime;
-
-  /**
-   * Current user.
-   *
-   * @var \Drupal\user\UserInterface
-   */
-  protected $user;
 
   /**
    * Password service.
@@ -45,33 +41,47 @@ class PasswordChange extends FormBase {
   protected $sessionManager;
 
   /**
+   * User storage.
+   *
+   * @var \Drupal\user\UserStorageInterface
+   */
+  protected $userStorage;
+
+  /**
    * Constructs the password change form.
    *
    * @param \Drupal\Component\Datetime\TimeInterface $date_time
    *   Date time.
-   * @param \Drupal\user\UserInterface $user
-   *   Current user.
+   * @param \Drupal\user\UserStorageInterface $user_storage
+   *   User storage.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   Messenger.
    * @param \Drupal\Core\Password\PasswordInterface $password
    *   Password service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   Request stack.
    * @param \Drupal\Core\Session\SessionManagerInterface $session_manager
    *   Session manager.
    */
-  public function __construct(TimeInterface $date_time, UserInterface $user, PasswordInterface $password, SessionManagerInterface $session_manager) {
+  public function __construct(TimeInterface $date_time, UserStorageInterface $user_storage, MessengerInterface $messenger, PasswordInterface $password, RequestStack $request_stack, SessionManagerInterface $session_manager) {
     $this->dateTime = $date_time;
-    $this->user = $user;
+    $this->messenger = $messenger;
     $this->password = $password;
+    $this->requestStack = $request_stack;
     $this->sessionManager = $session_manager;
+    $this->userStorage = $user_storage;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container): PasswordChange {
-    $user_id = $container->get('current_user')->id();
+  public static function create(ContainerInterface $container): PasswordChangeForm {
     return new static(
       $container->get('datetime.time'),
-      $container->get('entity_type.manager')->getStorage('user')->load($user_id),
+      $container->get('entity_type.manager')->getStorage('user'),
+      $container->get('messenger'),
       $container->get('password'),
+      $container->get('request_stack'),
       $container->get('session_manager')
     );
   }
@@ -88,14 +98,19 @@ class PasswordChange extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
     // Get user roles.
-    $roles = $this->user->getRoles();
+    $current_user = $this->currentUser();
+    $roles = $current_user->getRoles();
     $form_state->setValue('roles', $roles);
     $form_state->setUserInput(['roles' => $roles]);
 
     $user_pass_reset = FALSE;
     if (!$form_state->get('user_pass_reset') && ($token = $this->getRequest()->get('pass-reset-token'))) {
-      $session_key = 'pass_reset_' . $this->user->id();
+      $session_key = 'pass_reset_' . $current_user->id();
       $user_pass_reset = isset($_SESSION[$session_key]) && Crypt::hashEquals($_SESSION[$session_key], $token);
+      $form_state->set('user_pass_reset', $user_pass_reset);
+    }
+    elseif (!empty($this->sessionManager->getBag('attributes')->getBag()->get('password_enhancements_login_password_change_required'))) {
+      $user_pass_reset = TRUE;
       $form_state->set('user_pass_reset', $user_pass_reset);
     }
 
@@ -136,7 +151,8 @@ class PasswordChange extends FormBase {
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     parent::validateForm($form, $form_state);
 
-    if (!$form_state->get('user_pass_reset') && !$this->password->check($form_state->getValue('current_pass'), $this->user->getPassword())) {
+    $user = $this->loadCurrentUser();
+    if (!$form_state->get('user_pass_reset') && !$this->password->check($form_state->getValue('current_pass'), $user->getPassword())) {
       $form_state->setError($form['account']['current_pass'], $this->t('Incorrect password.'));
     }
   }
@@ -147,17 +163,27 @@ class PasswordChange extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     // Remove lock and clean-up session variables.
     $attributes_bag = $this->sessionManager->getBag('attributes')->getBag();
-    $attributes_bag->remove('password_enhancements_password_change_required');
+    $attributes_bag->remove('password_enhancements_login_password_change_required');
     $attributes_bag->remove('password_enhancements_pass_reset_token');
 
     // Update user fields.
-    $this->user->set('password_change_required', FALSE)
-      ->set('password_changed', $this->dateTime->getRequestTime())
+    $user = $this->loadCurrentUser();
+    $user->set('password_enhancements_password_change_required', FALSE)
       ->setPassword($form_state->getValue('pass'))
       ->save();
 
     $this->messenger()->addStatus($this->t('Your password has been successfully changed.'));
     $form_state->setRedirect('user.page');
+  }
+
+  /**
+   * Loads the full user object for the current user.
+   *
+   * @return \Drupal\user\UserInterface
+   *   The fully loaded user object.
+   */
+  protected function loadCurrentUser(): UserInterface {
+    return $this->userStorage->load($this->currentUser()->id());
   }
 
 }

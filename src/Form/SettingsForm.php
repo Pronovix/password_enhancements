@@ -13,9 +13,16 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Settings form.
  */
-class Settings extends ConfigFormBase {
+class SettingsForm extends ConfigFormBase {
 
+  /**
+   * Constraint completion strikethrough effect.
+   */
   const CONSTRAINT_EFFECT_STRIKETHROUGH = 'strikethrough';
+
+  /**
+   * Constraint completion hide effect.
+   */
   const CONSTRAINT_EFFECT_HIDE = 'hide';
 
   /**
@@ -50,7 +57,7 @@ class Settings extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container): Settings {
+  public static function create(ContainerInterface $container): SettingsForm {
     return new static(
       $container->get('config.factory'),
       $container->get('entity_type.manager')->getStorage('password_enhancements_constraint'),
@@ -79,8 +86,8 @@ class Settings extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
     if ($this->config('user.settings')->get('password_strength')) {
-      $this->messenger->addWarning($this->t('The core <a href="@url" target="_blank">password strength indicator</a> is enabled, it is recommended to disable it.', [
-        '@url' => Url::fromRoute('entity.user.admin_form', [], [
+      $this->messenger->addWarning($this->t('The built-in <a href=":url" target="_blank">password strength indicator</a> is enabled, it is recommended to disable it.', [
+        ':url' => Url::fromRoute('entity.user.admin_form', [], [
           'fragment' => 'edit-user-password-strength',
         ])->toString(),
       ]));
@@ -96,21 +103,21 @@ class Settings extends ConfigFormBase {
         static::CONSTRAINT_EFFECT_STRIKETHROUGH => $this->t('Strike-through'),
         static::CONSTRAINT_EFFECT_HIDE => $this->t('Hide'),
       ],
-      '#default_value' => $password_settings->get('constraint_update_effect') ?? static::CONSTRAINT_EFFECT_STRIKETHROUGH,
+      '#default_value' => $password_settings->get('constraint_update_effect'),
     ];
 
     $form['require_password'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Always require password at registration'),
       '#description' => $this->t('If enabled the password field will be always visible and required on the registration form.'),
-      '#default_value' => $password_settings->get('require_password') ?? FALSE,
+      '#default_value' => $password_settings->get('require_password'),
     ];
 
     $form['require_password_change'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Require changing password for password reset'),
       '#description' => $this->t('If enabled then in case if the user is coming from a password reset URL then after logging in the user will be redirected to the password change page where it is mandatory to change the password.'),
-      '#default_value' => $password_settings->get('require_password_change') ?? FALSE,
+      '#default_value' => $password_settings->get('require_password_change'),
     ];
 
     return parent::buildForm($form, $form_state);

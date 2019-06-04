@@ -2,13 +2,14 @@
 
 namespace Drupal\password_enhancements\Form;
 
-use Drupal\Component\Plugin\Exception\PluginException;
-use Drupal\Core\Config\Entity\ConfigEntityStorageInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\password_enhancements\Entity\Storage\ConstraintEntityStorageInterface;
+use Drupal\password_enhancements\Logger\Logger;
 use Drupal\password_enhancements\PasswordConstraintPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Password constraint config entity form.
@@ -18,9 +19,16 @@ class ConstraintForm extends EntityForm {
   /**
    * Config entity storage.
    *
-   * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface
+   * @var \Drupal\password_enhancements\Entity\Storage\ConstraintEntityStorageInterface
    */
   protected $constraintConfigEntityStorage;
+
+  /**
+   * Logger channel.
+   *
+   * @var \Drupal\password_enhancements\Logger\Logger
+   */
+  protected $logger;
 
   /**
    * Password constraint plugin manager.
@@ -32,17 +40,23 @@ class ConstraintForm extends EntityForm {
   /**
    * Constructs the entity form for password_enhancements_constraint entity.
    *
-   * @param \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $constraint_config_entity_storage
+   * @param \Drupal\password_enhancements\Entity\Storage\ConstraintEntityStorageInterface $constraint_config_entity_storage
    *   Config entity storage.
-   * @param \Drupal\password_enhancements\PasswordConstraintPluginManager $password_constraint_plugin_manager
-   *   Password constraint plugin manager.
+   * @param \Drupal\password_enhancements\Logger\Logger $logger
+   *   Logger channel.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   Messenger.
+   * @param \Drupal\password_enhancements\PasswordConstraintPluginManager $password_constraint_plugin_manager
+   *   Password constraint plugin manager.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   Request stack.
    */
-  public function __construct(ConfigEntityStorageInterface $constraint_config_entity_storage, PasswordConstraintPluginManager $password_constraint_plugin_manager, MessengerInterface $messenger) {
+  public function __construct(ConstraintEntityStorageInterface $constraint_config_entity_storage, Logger $logger, MessengerInterface $messenger, PasswordConstraintPluginManager $password_constraint_plugin_manager, RequestStack $request_stack) {
     $this->constraintConfigEntityStorage = $constraint_config_entity_storage;
-    $this->passwordConstraintPluginManager = $password_constraint_plugin_manager;
+    $this->logger = $logger;
     $this->messenger = $messenger;
+    $this->passwordConstraintPluginManager = $password_constraint_plugin_manager;
+    $this->requestStack = $request_stack;
   }
 
   /**
@@ -51,8 +65,10 @@ class ConstraintForm extends EntityForm {
   public static function create(ContainerInterface $container): ConstraintForm {
     return new static(
       $container->get('entity_type.manager')->getStorage('password_enhancements_constraint'),
+      $container->get('logger.password_enhancements'),
+      $container->get('messenger'),
       $container->get('plugin.manager.password_constraint'),
-      $container->get('messenger')
+      $container->get('request_stack')
     );
   }
 
@@ -65,7 +81,15 @@ class ConstraintForm extends EntityForm {
     $form['#title'] = $this->t('Edit constraint');
 
     $options = [];
+    $policy_id = $this->getRequest()->get('password_enhancements_policy')->id();
+    $constraints = $this->constraintConfigEntityStorage->loadByRole($policy_id);
+    $default_type = $this->entity->getType();
     foreach ($this->passwordConstraintPluginManager->getDefinitions() as $definition) {
+      // Skip already added unique constraints.
+      if (!empty($definition['unique']) && $default_type !== $definition['id'] && array_key_exists("{$policy_id}.{$definition['id']}", $constraints)) {
+        continue;
+      }
+
       $options[$definition['id']] = $definition['name'];
     }
 
@@ -80,7 +104,8 @@ class ConstraintForm extends EntityForm {
       '#title' => $this->t('Constraint'),
       '#description' => $this->t('The type of the constraint.'),
       '#options' => $options,
-      '#default_value' => $this->entity->getType(),
+      '#default_value' => $default_type,
+      '#empty_value' => '',
       '#required' => TRUE,
       '#ajax' => [
         'callback' => '::updateForm',
@@ -121,13 +146,13 @@ class ConstraintForm extends EntityForm {
     ];
 
     try {
-      $form['wrapper'] = static::updateForm($form, $form_state);
+      $form['wrapper'] = $this->updateForm($form, $form_state);
     }
-    catch (PluginException $e) {
+    catch (\Exception $e) {
       $this->messenger->addError($this->t('Invalid plugin ID: @error', [
         '@error' => $e->getMessage(),
       ]));
-      watchdog_exception('password_enhancements', $e);
+      $this->logger->logException('Invalid plugin ID given.', $e);
     }
 
     return $form;
@@ -148,11 +173,11 @@ class ConstraintForm extends EntityForm {
    */
   public function updateForm(array $form, FormStateInterface $form_state): array {
     // Get type if exist.
-    if (($type = $this->entity->getType()) === NULL) {
-      $type = $form_state->getValue('type');
+    if (($type = $this->entity->getType()) === '') {
+      $type = $form_state->getValue('type', '');
     }
 
-    if ($type !== NULL) {
+    if ($type !== '') {
       // Get plugin instance for the selected type.
       $plugin_instance = $this->passwordConstraintPluginManager->createInstance($type, $this->entity->getConfiguration());
 
@@ -204,7 +229,7 @@ class ConstraintForm extends EntityForm {
         $entities = $this->constraintConfigEntityStorage->loadByProperties([
           'type' => $type,
         ]);
-        if (array_key_exists($type . '.' . $this->getRequest()->get('password_enhancements_policy')->id(), $entities)) {
+        if (array_key_exists($this->getRequest()->get('password_enhancements_policy')->id() . '.' . $type, $entities)) {
           $form_state->setError($form['type'], $this->t('Only one instance can be created from the selected constraint.'));
         }
       }
@@ -230,11 +255,26 @@ class ConstraintForm extends EntityForm {
     }
 
     parent::submitForm($form, $form_state);
+  }
 
-    $this->messenger->addStatus('The password constraint was successfully saved.');
-    $form_state->setRedirect('entity.password_enhancements_constraint.collection', [
-      'password_enhancements_policy' => $this->getRequest()->get('password_enhancements_policy')->id(),
+  /**
+   * {@inheritdoc}
+   */
+  public function save(array $form, FormStateInterface $form_state) {
+    $status = parent::save($form, $form_state);
+
+    if ($status === SAVED_NEW) {
+      $this->messenger->addStatus('The constraint was successfully created.');
+    }
+    else {
+      $this->messenger->addStatus('The constraint was successfully updated.');
+    }
+
+    $form_state->setRedirect($this->entity->toUrl('collection')->getRouteName(), [
+      'password_enhancements_policy' => $this->entity->getPolicy(),
     ]);
+
+    return $status;
   }
 
 }

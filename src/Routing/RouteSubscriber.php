@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\password_enhancements_translation_helper\Routing;
+namespace Drupal\password_enhancements\Routing;
 
 use Drupal\config_translation\ConfigMapperManagerInterface;
 use Drupal\Core\Routing\RouteSubscriberBase;
@@ -45,11 +45,11 @@ class RouteSubscriber extends RouteSubscriberBase {
     $mappers = $this->mapperManager->getMappers($collection);
     $constraint = &$mappers['password_enhancements_constraint'];
     $route = $constraint->getOverviewRoute();
-    $route->setOption('parameters', $route->getOption('parameters') + [
+    $route->setOption('parameters', array_merge_recursive($route->getOption('parameters') ?: [], [
       'password_enhancements_policy' => [
         'type' => 'entity:password_enhancements_policy',
       ],
-    ]);
+    ]));
 
     $collection->add($constraint->getOverviewRouteName(), $route);
   }

@@ -3,6 +3,7 @@
 namespace Drupal\password_enhancements\Plugin\PasswordConstraint;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\password_enhancements\Plugin\Exception\PasswordConstraintPluginValidationException;
 
 /**
  * Special character password constraint plugin.
@@ -40,7 +41,7 @@ final class SpecialCharacter extends MinimumCharacters {
     $form['use_custom_special_characters'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Define special characters'),
-      '#description' => $this->t('If no custom special characters are defined, then all non-alphanumeric characters will be checked as special.'),
+      '#description' => $this->t('If no custom special characters are defined then all non-alphanumeric characters will be checked as special.'),
       '#default_value' => !empty($this->configuration['use_custom_special_characters']) ? $this->configuration['use_custom_special_characters'] : 0,
     ];
 
@@ -79,7 +80,7 @@ final class SpecialCharacter extends MinimumCharacters {
   /**
    * {@inheritdoc}
    */
-  public function validate(string $value): bool {
+  public function validate(string $value): void {
     if ($this->configuration['use_custom_special_characters']) {
       $special_characters = preg_quote($this->configuration['special_characters'], '/');
       $result = !empty($special_characters) ? preg_replace("/([^{$special_characters}])/", '', $value) : '';
@@ -88,17 +89,23 @@ final class SpecialCharacter extends MinimumCharacters {
       $result = preg_replace('/([a-z0-9])/i', '', $value);
     }
 
-    $is_valid = parent::validate($result ?? "", $this->configuration['use_custom_special_characters']);
-
-    if (!$is_valid && $this->configuration['use_custom_special_characters']) {
-      $count = $this->configuration['minimum_characters'] - mb_strlen($result);
-      $this->errorMessage = $count > 1 ? strtr($this->configuration['descriptionPlural'], [
-        '@minimum_characters' => $count,
-        '@special_characters' => $this->configuration['special_characters'],
-      ]) : $this->configuration['descriptionSingular'];
+    try {
+      parent::validate($result ?? '');
     }
+    catch (PasswordConstraintPluginValidationException $e) {
+      if ($this->configuration['use_custom_special_characters']) {
+        $count = $this->configuration['minimum_characters'] - mb_strlen($result);
+        $message = $count > 1 ? strtr($this->configuration['descriptionPlural'], [
+          '@minimum_characters' => $count,
+          '@special_characters' => $this->configuration['special_characters'],
+        ]) : $this->configuration['descriptionSingular'];
+      }
+      else {
+        $message = $e->getMessage();
+      }
 
-    return $is_valid;
+      throw new PasswordConstraintPluginValidationException($message, $e->getCode(), $e);
+    }
   }
 
 }

@@ -32,8 +32,8 @@ final class Number extends MinimumCharacters {
   /**
    * {@inheritdoc}
    */
-  public function validate(string $value): bool {
-    return parent::validate(preg_replace('/([^0-9])/', '', $value));
+  public function validate(string $value): void {
+    parent::validate(preg_replace('/([^0-9])/', '', $value));
   }
 
 }

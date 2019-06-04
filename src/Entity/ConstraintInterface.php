@@ -20,26 +20,26 @@ interface ConstraintInterface extends EntityInterface {
   /**
    * Gets singular description.
    *
-   * @return string|null
+   * @return string
    *   The constraint's singular description.
    */
-  public function getDescriptionSingular(): ?string;
+  public function getDescriptionSingular(): string;
 
   /**
    * Gets plural description.
    *
-   * @return string|null
+   * @return string
    *   The constraint's plural description.
    */
-  public function getDescriptionPlural(): ?string;
+  public function getDescriptionPlural(): string;
 
   /**
    * Gets the related password policy config entity ID.
    *
-   * @return string|null
+   * @return string
    *   The password policy config entity ID.
    */
-  public function getPolicy(): ?string;
+  public function getPolicy(): string;
 
   /**
    * Gets a specific setting.
@@ -55,7 +55,7 @@ interface ConstraintInterface extends EntityInterface {
   /**
    * Gets the settings.
    *
-   * @return array
+   * @return string[]
    *   A list of settings.
    */
   public function getSettings(): array;
@@ -66,12 +66,13 @@ interface ConstraintInterface extends EntityInterface {
    * @return string
    *   Password constraint plugin ID.
    */
-  public function getType(): ?string;
+  public function getType(): string;
 
   /**
    * Gets whether the constraint is required or can be marked as optional.
    *
    * @return bool
+   *   Returns TRUE if the constraint is required, FALSE otherwise.
    */
   public function isRequired(): bool;
 
@@ -115,6 +116,7 @@ interface ConstraintInterface extends EntityInterface {
    *   TRUE if the constraint is required, FALSE if can be marked as optional.
    *
    * @return \Drupal\password_enhancements\Entity\ConstraintInterface
+   *   The current object.
    */
   public function setRequired(bool $required): ConstraintInterface;
 

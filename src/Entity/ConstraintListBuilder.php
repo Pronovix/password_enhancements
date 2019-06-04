@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\password_enhancements\PasswordConstraintPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -22,11 +23,27 @@ class ConstraintListBuilder extends EntityListBuilder {
   protected $currentRequest;
 
   /**
+   * Password constraint plugin manager.
+   *
+   * @var \Drupal\password_enhancements\PasswordConstraintPluginManager
+   */
+  protected $passwordConstraintPluginManager;
+
+  /**
+   * Role storage.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface
+   */
+  protected $roleStorage;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, Request $request) {
+  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, EntityStorageInterface $role_storage, PasswordConstraintPluginManager $password_constraint_plugin_manager, Request $request) {
     parent::__construct($entity_type, $storage);
     $this->currentRequest = $request;
+    $this->passwordConstraintPluginManager = $password_constraint_plugin_manager;
+    $this->roleStorage = $role_storage;
   }
 
   /**
@@ -36,6 +53,8 @@ class ConstraintListBuilder extends EntityListBuilder {
     return new static(
       $entity_type,
       $container->get('entity_type.manager')->getStorage($entity_type->id()),
+      $container->get('entity_type.manager')->getStorage('user_role'),
+      $container->get('plugin.manager.password_constraint'),
       $container->get('request_stack')->getCurrentRequest()
     );
   }
@@ -55,9 +74,9 @@ class ConstraintListBuilder extends EntityListBuilder {
   public function render(): array {
     $build = parent::render();
     $build['#title'] = $this->t('%name password policy constraints', [
-      '%name' => $this->currentRequest->get('password_enhancements_policy')->getName(),
+      '%name' => $this->roleStorage->load($this->currentRequest->get('password_enhancements_policy')->getRole())->label(),
     ]);
-    $build['table']['#empty'] = $this->t('There is no password constraint created yet for this policy.');
+    $build['table']['#empty'] = $this->t('There is no constraint created yet for this policy.');
     return $build;
   }
 
@@ -66,7 +85,7 @@ class ConstraintListBuilder extends EntityListBuilder {
    */
   public function buildHeader(): array {
     $row = [
-      'type' => $this->t('Type'),
+      'constraint' => $this->t('Constraint'),
       'required' => $this->t('Required'),
       'description_singular' => $this->t('Description (singular)'),
       'description_plural' => $this->t('Description (plural)'),
@@ -82,28 +101,30 @@ class ConstraintListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity): array {
-    $settings = '';
+    $settings = [];
     $plugin_settings = $entity->getSettings();
     if (!empty($plugin_settings)) {
-      $settings .= '<ul>';
       foreach ($plugin_settings as $setting => $value) {
         if ($value !== NULL) {
-          $settings .= "<li>{$setting}: {$value}</li>";
+          $settings[] = "{$setting}: {$value}";
         }
       }
-      $settings .= '</ul>';
-    }
-    else {
-      $settings = $this->t('No settings available for this constraint.');
     }
 
+    $plugin_definition = $this->passwordConstraintPluginManager->getDefinition($entity->getType());
     $row = [
-      $entity->getType(),
-      $entity->isRequired() ? $this->t('yes') : $this->t('no'),
-      $entity->getDescriptionSingular(),
-      $entity->getDescriptionPlural(),
-      ['data' => ['#markup' => $settings]],
-      $entity->status() ? $this->t('enabled') : $this->t('disabled'),
+      'constraint' => $plugin_definition['name'],
+      'required' => $entity->isRequired() ? $this->t('yes') : $this->t('no'),
+      'description_singular' => $entity->getDescriptionSingular(),
+      'description_plural' => $entity->getDescriptionPlural(),
+      'settings' => [
+        'data' => [
+          '#theme' => 'item_list',
+          '#items' => $settings,
+          '#empty' => $this->t('No settings available for this constraint.'),
+        ],
+      ],
+      'status' => $entity->status() ? $this->t('enabled') : $this->t('disabled'),
     ];
 
     return $row + parent::buildRow($entity);

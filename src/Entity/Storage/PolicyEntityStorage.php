@@ -3,6 +3,7 @@
 namespace Drupal\password_enhancements\Entity\Storage;
 
 use Drupal\Component\Uuid\UuidInterface;
+use Drupal\Core\Cache\MemoryCache\MemoryCacheInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\Core\Config\Entity\ConfigEntityStorageInterface;
@@ -10,6 +11,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\password_enhancements\Entity\PolicyInterface;
+use Drupal\password_enhancements\Type\QueryOrder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -27,8 +29,8 @@ class PolicyEntityStorage extends ConfigEntityStorage implements PolicyEntitySto
   /**
    * {@inheritdoc}
    */
-  public function __construct(EntityTypeInterface $entity_type, ConfigFactoryInterface $config_factory, UuidInterface $uuid_service, LanguageManagerInterface $language_manager, ConfigEntityStorageInterface $constraint_entity_storage) {
-    parent::__construct($entity_type, $config_factory, $uuid_service, $language_manager);
+  public function __construct(EntityTypeInterface $entity_type, ConfigFactoryInterface $config_factory, UuidInterface $uuid_service, LanguageManagerInterface $language_manager, ConfigEntityStorageInterface $constraint_entity_storage, MemoryCacheInterface $memory_cache) {
+    parent::__construct($entity_type, $config_factory, $uuid_service, $language_manager, $memory_cache);
 
     $this->constraintEntityStorage = $constraint_entity_storage;
   }
@@ -42,7 +44,8 @@ class PolicyEntityStorage extends ConfigEntityStorage implements PolicyEntitySto
       $container->get('config.factory'),
       $container->get('uuid'),
       $container->get('language_manager'),
-      $container->get('entity_type.manager')->getStorage('password_enhancements_constraint')
+      $container->get('entity_type.manager')->getStorage('password_enhancements_constraint'),
+      $container->get('entity.memory_cache')
     );
   }
 
@@ -70,13 +73,17 @@ class PolicyEntityStorage extends ConfigEntityStorage implements PolicyEntitySto
    *
    * @param array|null $roles
    *   The roles for which the results should be limited.
-   * @param string $order
+   * @param \Drupal\password_enhancements\Type\QueryOrder|null $order
    *   The order of the entities.
    *
    * @return string[]
    *   List of entity IDs.
    */
-  protected function getEntityIdsByRoleAndPriority(array $roles, string $order): array {
+  protected function getEntityIdsByRoleAndPriority(array $roles, ?QueryOrder $order = NULL): array {
+    if ($order === NULL) {
+      $order = QueryOrder::desc();
+    }
+
     $query = $this->getQuery()
       ->sort('priority', $order);
 
@@ -91,7 +98,7 @@ class PolicyEntityStorage extends ConfigEntityStorage implements PolicyEntitySto
   /**
    * {@inheritdoc}
    */
-  public function loadByRoleAndPriority(array $roles = NULL, string $order = 'desc'): ?PolicyInterface {
+  public function loadByRoleAndPriority(array $roles = NULL, ?QueryOrder $order = NULL): ?PolicyInterface {
     $entities = $this->getEntityIdsByRoleAndPriority($roles, $order);
     return !empty($entities) ? $this->load(reset($entities)) : NULL;
   }
@@ -99,7 +106,7 @@ class PolicyEntityStorage extends ConfigEntityStorage implements PolicyEntitySto
   /**
    * {@inheritdoc}
    */
-  public function loadMultipleByRoleAndPriority(array $roles = NULL, string $order = 'desc'): array {
+  public function loadMultipleByRoleAndPriority(array $roles = NULL, ?QueryOrder $order = NULL): array {
     return $this->loadMultiple($this->getEntityIdsByRoleAndPriority($roles, $order));
   }
 

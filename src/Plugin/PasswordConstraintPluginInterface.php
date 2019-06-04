@@ -26,14 +26,6 @@ interface PasswordConstraintPluginInterface {
   public function defaultDescriptionPlural(): string;
 
   /**
-   * The generated error message.
-   *
-   * @return string|null
-   *   The error message or NULL if there was none.
-   */
-  public function getErrorMessage(): ?string;
-
-  /**
    * Gets the initial description.
    *
    * @return string
@@ -75,9 +67,9 @@ interface PasswordConstraintPluginInterface {
    * @param string $value
    *   The value that needs to be validated.
    *
-   * @return bool
-   *   Returns TRUE if the constraint passes, error message otherwise.
+   * @throws \Drupal\password_enhancements\Plugin\Exception\PasswordConstraintPluginValidationException
+   *   The exception will be thrown if the validation fails.
    */
-  public function validate(string $value): bool;
+  public function validate(string $value): void;
 
 }
