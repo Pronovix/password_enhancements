@@ -10,6 +10,14 @@ use Drupal\Core\Entity\EntityInterface;
 interface ConstraintInterface extends EntityInterface {
 
   /**
+   * Gets the configuration required for initializing a new plugin instance.
+   *
+   * @return array
+   *   Configuration for the password constraint plugin instance.
+   */
+  public function getConfiguration(): array;
+
+  /**
    * Gets singular description.
    *
    * @return string|null
@@ -61,6 +69,13 @@ interface ConstraintInterface extends EntityInterface {
   public function getType(): ?string;
 
   /**
+   * Gets whether the constraint is required or can be marked as optional.
+   *
+   * @return bool
+   */
+  public function isRequired(): bool;
+
+  /**
    * Sets singular description.
    *
    * @param string $description
@@ -92,6 +107,16 @@ interface ConstraintInterface extends EntityInterface {
    *   The current object.
    */
   public function setPolicy(string $policy): ConstraintInterface;
+
+  /**
+   * Sets whether the constraint should be required or it can be optional.
+   *
+   * @param bool $required
+   *   TRUE if the constraint is required, FALSE if can be marked as optional.
+   *
+   * @return \Drupal\password_enhancements\Entity\ConstraintInterface
+   */
+  public function setRequired(bool $required): ConstraintInterface;
 
   /**
    * Sets settings.

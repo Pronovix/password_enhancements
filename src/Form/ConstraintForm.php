@@ -90,6 +90,13 @@ class ConstraintForm extends EntityForm {
       '#disabled' => !$this->entity->isNew(),
     ];
 
+    $form['required'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Required'),
+      '#description' => $this->t('If the constraint is required then it cannot be marked as optional if the minimum required constraints set by the policy are passed the validation.'),
+      '#default_value' => $this->entity->isRequired(),
+    ];
+
     $form['wrapper'] = [
       '#type' => 'container',
       '#prefix' => "<div id='{$settings_wrapper_id}'>",

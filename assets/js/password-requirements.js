@@ -8,15 +8,9 @@
   // Plugin storage.
   var plugins = {};
 
-  // Refreshing the fields with ajax causes call attach callback multiple times,
-  // to prevent it, keep track whether it was attached already or not.
-  var attached = false;
-
   Drupal.behaviors.passwordEnhancementsRequirements = {
     attach: function (context, settings) {
-      if (!attached) {
-        attached = true;
-
+      if (context.nodeName === '#document' || context.id === 'password-policy-constraint-ajax-wrapper') {
         // Always reset the ajaxComplete trigger, otherwise it would be bounded
         // every time when the behaviour being attached.
         $(window).unbind('ajaxComplete', ajaxComplete).ajaxComplete(ajaxComplete);
@@ -30,10 +24,9 @@
     },
     detach: function (context, settings, trigger) {
       // On unload unbind events and reset variables.
-      if (trigger === 'unload') {
+      if (trigger === 'unload' && context.id === 'password-policy-constraint-ajax-wrapper') {
         window.removeEventListener('passwordEnhancementsPluginLoad', passwordEnhancementsPluginLoad);
         $('input[name="pass[pass1]"]').unbind('keyup', passwordFieldKeyUp);
-        attached = false;
         plugins = {};
         settings.passwordEnhancementsConstraint.plugins = {};
       }
@@ -101,7 +94,7 @@
     // If the minimum constrains are valid mark the rest of the fields as
     // optional.
     if ($requirementsField.find('.constraint[data-validation-passed="yes"]').length >= drupalSettings.passwordEnhancementsConstraint.minimumRequiredConstraints) {
-      var optionalFields = $requirementsField.find('.constraint:not([data-validation-passed="yes"])');
+      var optionalFields = $requirementsField.find('.constraint:not([data-validation-passed="yes"])[data-required="no"]');
       optionalFields.attr('data-validation-passed', 'none');
       optionalFields.each(function (index, field) {
         var $field = $(field);

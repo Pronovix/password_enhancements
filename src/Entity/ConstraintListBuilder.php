@@ -67,6 +67,7 @@ class ConstraintListBuilder extends EntityListBuilder {
   public function buildHeader(): array {
     $row = [
       'type' => $this->t('Type'),
+      'required' => $this->t('Required'),
       'description_singular' => $this->t('Description (singular)'),
       'description_plural' => $this->t('Description (plural)'),
       'settings' => $this->t('Settings'),
@@ -98,6 +99,7 @@ class ConstraintListBuilder extends EntityListBuilder {
 
     $row = [
       $entity->getType(),
+      $entity->isRequired() ? $this->t('yes') : $this->t('no'),
       $entity->getDescriptionSingular(),
       $entity->getDescriptionPlural(),
       ['data' => ['#markup' => $settings]],

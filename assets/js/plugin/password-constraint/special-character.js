@@ -42,7 +42,7 @@
    */
   SpecialCharacterPlugin.prototype.validate = function (value, settings) {
     var regex;
-    if (settings.hasOwnProperty('use_custom_special_characters') && settings['use_custom_special_characters'] === 1) {
+    if (settings.hasOwnProperty('use_custom_special_characters') && parseInt(settings['use_custom_special_characters']) === 1) {
       var specialCharacters = settings['special_characters'].replace(/[-[\]{}()*+!<=:?.\/\\^$|#\s,]/g, '\\$&');
       regex = new RegExp('([' + specialCharacters + '])', 'g')
     }

@@ -76,6 +76,13 @@ class Constraint extends ConfigEntityBase implements ConstraintInterface {
   public $policy;
 
   /**
+   * Whether the constraint is required or can be marked as optional.
+   *
+   * @var bool
+   */
+  public $required;
+
+  /**
    * Extra settings for the constraint.
    *
    * @var string[]
@@ -151,6 +158,13 @@ class Constraint extends ConfigEntityBase implements ConstraintInterface {
   /**
    * {@inheritdoc}
    */
+  public function isRequired(): bool {
+    return $this->required ?? FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function setDescriptionSingular(string $description): ConstraintInterface {
     $this->descriptionSingular = $description;
     return $this;
@@ -169,6 +183,14 @@ class Constraint extends ConfigEntityBase implements ConstraintInterface {
    */
   public function setPolicy(string $policy): ConstraintInterface {
     $this->policy = $policy;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setRequired(bool $required): ConstraintInterface {
+    $this->required = $required;
     return $this;
   }
 
