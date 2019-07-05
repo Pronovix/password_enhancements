@@ -13,5 +13,22 @@
         "drupal/core": "^8.7",
         "ext-mbstring": "*",
         "php": ">=7.1"
+    },
+	"require-dev": {
+        "behat/mink": "dev-master#153e4bb",
+        "drupal/drupal-extension": "^3.4.0",
+        "instaclick/php-webdriver": "^1.4.5",
+        "phpunit/phpunit": "^6.5",
+        "webflo/drupal-core-require-dev": "^8.7"
+    },
+	"autoload": {
+        "psr-4": {
+            "Drupal\\password_enhancements\\": "./src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Drupal\\Tests\\password_enhancements\\": "./tests/"
+        }
     }
 }
