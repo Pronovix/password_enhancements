@@ -1,0 +1,17 @@
+{
+    "name": "drupal/password_enhancements",
+    "type": "drupal-module",
+    "homepage": "https://github.com/Pronovix/password_enhancements",
+    "description": "Password related enhancements.",
+    "keywords": ["Drupal", "password", "enhancements", "security"],
+    "license": "GPL-2.0-or-later",
+    "support": {
+        "issues": "https://github.com/Pronovix/password_enhancements/issues",
+        "source": "https://github.com/Pronovix/password_enhancements"
+    },
+    "require": {
+        "drupal/core": "^8.7",
+        "ext-mbstring": "*",
+        "php": ">=7.1"
+    }
+}
