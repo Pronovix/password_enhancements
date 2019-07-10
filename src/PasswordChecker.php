@@ -74,7 +74,8 @@ class PasswordChecker {
 
     // Check password expiry.
     $expire_seconds = $policy->getExpireSeconds();
-    return $user->get('password_enhancements_password_change_required')->getValue()[0]['value'] || ($expire_seconds !== PolicyInterface::PASSWORD_NO_EXPIRY && (int) $user->get('password_enhancements_password_changed_date')->getValue()[0]['value'] < $this->time->getRequestTime() - $expire_seconds);
+    $is_password_change_required = $user->get('password_enhancements_password_change_required')->getValue() ? (bool) $user->get('password_enhancements_password_change_required')->getValue()[0]['value'] : FALSE;
+    return $is_password_change_required || ($expire_seconds !== PolicyInterface::PASSWORD_NO_EXPIRY && (int) $user->get('password_enhancements_password_changed_date')->getValue()[0]['value'] < $this->time->getRequestTime() - $expire_seconds);
   }
 
   /**

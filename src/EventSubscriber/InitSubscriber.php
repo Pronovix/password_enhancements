@@ -112,13 +112,14 @@ final class InitSubscriber implements EventSubscriberInterface {
    * @throws \Drupal\Core\Entity\EntityStorageException
    *   If the user could not be saved.
    */
-  public function checkRequiredPasswordChange(GetResponseEvent $event) {
+  public function checkRequiredPasswordChange(GetResponseEvent $event): void {
     if ($event->isMasterRequest()) {
       $policy = $this->policyStorage->loadByRoleAndPriority($this->account->getRoles());
       if ($policy !== NULL) {
         /** @var \Drupal\user\UserInterface $user */
         $user = $this->userStorage->load($this->account->id());
-        if (!$user->get('password_enhancements_password_change_required')->getValue()[0]['value'] && $this->passwordChecker->isExpired($policy)) {
+        $is_password_change_required = $user->get('password_enhancements_password_change_required')->getValue() ? (bool) $user->get('password_enhancements_password_change_required')->getValue()[0]['value'] : FALSE;
+        if (!$is_password_change_required && $this->passwordChecker->isExpired($policy)) {
           $user->set('password_enhancements_password_change_required', TRUE);
           $user->save();
         }
@@ -135,7 +136,7 @@ final class InitSubscriber implements EventSubscriberInterface {
    * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
    *   Response event.
    */
-  public function passwordChangeNotification(GetResponseEvent $event) {
+  public function passwordChangeNotification(GetResponseEvent $event): void {
     if ($event->isMasterRequest() && Url::fromRoute('password_enhancements.password_change')->toString() !== $event->getRequest()->getPathInfo()) {
       $policy = $this->policyStorage->loadByRoleAndPriority($this->account->getRoles());
       if ($policy !== NULL && $this->passwordChecker->showWarningMessage($policy)) {
