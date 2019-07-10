@@ -19,11 +19,11 @@ interface PolicyEntityStorageInterface extends ConfigEntityStorageInterface {
    * @param \Drupal\password_enhancements\Type\QueryOrder|null $order
    *   The order of the password policies.
    *
-   * @return \Drupal\password_enhancements\Entity\PolicyInterface
-   *   A password policy entity based on the order, if ordered by 'desc' then it
-   *   will return a policy with the highest priority from the given set of
-   *   rules, otherwise a password policy with the lowest priority will be
-   *   returned.
+   * @return \Drupal\password_enhancements\Entity\PolicyInterface|null
+   *   A password policy entity based on the provided roles if exists,
+   *   otherwise NULL. If ordered by 'desc' then it will return a policy with
+   *   the highest priority from the given set of roles, otherwise a password
+   *   policy with the lowest priority will be returned.
    */
   public function loadByRoleAndPriority(array $roles = NULL, QueryOrder $order = NULL): ?PolicyInterface;
 
