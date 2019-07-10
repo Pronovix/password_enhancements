@@ -70,22 +70,22 @@
     var isRequired = typeof $(this).attr('required') !== 'undefined';
     var $requirementsField = $('#password-policy-constraints');
     var isVisible = $requirementsField.css('display') !== 'none';
+    var pluginSettings = drupalSettings.passwordEnhancementsConstraint.plugins;
 
     if (isVisible && password.length === 0 && !isRequired) {
       $requirementsField.hide();
     }
-    else if (!isVisible && password.length !== 0) {
+    else if (!isVisible && password.length !== 0 && pluginSettings.length !== 0) {
       $requirementsField.show();
     }
 
     // Validate password with each plugin.
-    var settings = drupalSettings.passwordEnhancementsConstraint.plugins;
     var validCount = 0;
     for (var type in plugins) {
-      if (plugins.hasOwnProperty(type) && settings.hasOwnProperty(type)) {
+      if (plugins.hasOwnProperty(type) && pluginSettings.hasOwnProperty(type)) {
         for (var id in plugins[type]) {
-          if (plugins[type].hasOwnProperty(id) && settings[type].hasOwnProperty(id)) {
-            validCount += plugins[type][id].validate($(this).val(), settings[type][id]) ? 1 : 0;
+          if (plugins[type].hasOwnProperty(id) && pluginSettings[type].hasOwnProperty(id)) {
+            validCount += plugins[type][id].validate($(this).val(), pluginSettings[type][id]) ? 1 : 0;
           }
         }
       }
