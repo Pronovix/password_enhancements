@@ -77,7 +77,8 @@ class AccessControlHandler implements ContainerInjectionInterface {
   public function hasPasswordChangeAccess(AccountInterface $current_user): AccessResultInterface {
     /** @var \Drupal\user\UserInterface $user */
     $user = $this->userStorage->load($current_user->id());
-    return AccessResult::allowedIf($user->get('password_enhancements_password_change_required')->getValue()[0]['value']);
+    $is_password_change_required = $user->get('password_enhancements_password_change_required')->getValue() ? (bool) $user->get('password_enhancements_password_change_required')->getValue()[0]['value'] : FALSE;
+    return AccessResult::allowedIf($is_password_change_required);
   }
 
   /**

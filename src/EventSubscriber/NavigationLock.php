@@ -111,8 +111,9 @@ class NavigationLock implements EventSubscriberInterface {
       $attributes_bag = $this->sessionManager->getBag('attributes')->getBag();
       /** @var \Drupal\user\UserInterface $user */
       $user = $this->userStorage->load($this->account->id());
+      $is_password_change_required = $user->get('password_enhancements_password_change_required')->getValue() ? (bool) $user->get('password_enhancements_password_change_required')->getValue()[0]['value'] : FALSE;
 
-      if ($user->get('password_enhancements_password_change_required')->getValue()[0]['value']) {
+      if ($is_password_change_required) {
         $allowed_paths = [
           Url::fromRoute('password_enhancements.password_change')->toString(),
           Url::fromRoute('user.logout')->toString(),
