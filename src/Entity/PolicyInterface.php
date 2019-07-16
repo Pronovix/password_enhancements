@@ -24,7 +24,7 @@ interface PolicyInterface extends EntityInterface {
   const PASSWORD_NO_WARNING = 0;
 
   /**
-   * Get the expiry in days.
+   * Gets the expiry in days.
    *
    * @return int
    *   The expiry in days.
