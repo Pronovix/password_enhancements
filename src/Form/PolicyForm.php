@@ -139,7 +139,7 @@ class PolicyForm extends EntityForm {
     $form['expiryWarningMessage'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Expiry warning message'),
-      '#description' => $this->t("This message will be presented for the user if the user's password is about to expire.<br>Useable placeholders: <ul><li>@url: URL for the user edit page</li><li>@date_time: the date and time when the password will expire</li></ul>."),
+      '#description' => $this->t("This message will be presented for the user if the user's password is about to expire.<br>Available placeholders: <ul><li>@url: URL for the user edit page</li><li>@date_time: the date and time when the password will expire</li></ul>."),
       '#default_value' => $entity->getExpiryWarningMessage() ?? 'Your password will expire on @date_time, please <a href="@url">change your password</a> before it expires to prevent any potential data loss.',
       '#states' => [
         'invisible' => [
