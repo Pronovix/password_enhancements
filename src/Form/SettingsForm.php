@@ -38,7 +38,7 @@ class SettingsForm extends ConfigFormBase {
   protected $passwordConstraintEntityStorage;
 
   /**
-   * Constructs the settings from for password constraint.
+   * Constructs the settings form for a password constraint.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   Config factory.
