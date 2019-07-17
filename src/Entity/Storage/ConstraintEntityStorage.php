@@ -81,9 +81,11 @@ class ConstraintEntityStorage extends ConfigEntityStorage implements ConstraintE
     }
 
     $plugin_definition = $this->passwordConstraintPluginManager->getDefinition($type);
-    $entity->id = $entity->getPolicy() . '.' . $type;
-    if (!$plugin_definition['unique']) {
-      $entity->id .= '.' . $this->uuidService->generate();
+    if ($entity->isNew()) {
+      $entity->id = $entity->getPolicy() . '.' . $type;
+      if (!$plugin_definition['unique']) {
+        $entity->id .= '.' . $this->uuidService->generate();
+      }
     }
 
     return parent::save($entity);
