@@ -91,8 +91,9 @@ class PasswordEnhancementsPermissionTest extends PasswordEnhancementsFunctionalT
   /**
    * Retrieve the entity link templates from an entity.
    *
-   * @param string $definitons
+   * @param string $entity_id
    *  The entity ID.
+   *
    * @return array
    */
   protected function entityRoutes(string $entity_id): array {
