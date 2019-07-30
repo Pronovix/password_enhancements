@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\password_enhancements\Functional;
 
-use Drupal\Core\Discovery\YamlDiscovery;
 use Drupal\password_enhancements\Entity\Constraint;
 use Drupal\password_enhancements\Entity\Policy;
 use Drupal\user\Entity\Role;

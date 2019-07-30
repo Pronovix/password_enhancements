@@ -49,10 +49,22 @@ class PasswordEnhancementsTest extends PasswordEnhancementsFunctionalTestBase {
     parent::tearDown();
   }
 
+  public function testCreatePolicy() {
+    $this->drupalLogin($this->evaluatedUser);
+    $role = $this->container->get('entity_type.manager')->getStorage('user_role')->load(AccountProxyInterface::AUTHENTICATED_ROLE);
+    $page = $this->getSession()->getPage();
+    $role_label = $role->label();
+    $this->drupalGet(Url::fromRoute('entity.password_enhancements_policy.add_form')->toString());
+    $page->selectFieldOption('edit-role', AccountProxyInterface::AUTHENTICATED_ROLE);
+    $page->fillField('edit-minimumrequiredconstraints', 3);
+    $page->pressButton('Save');
+  }
+
   /**
    * Tests create, edit or delete a policy.
    */
-  public function testPolicyAdministration() {
+  public function _testPolicyAdministration() {
+
     // TODO: Create a policy
 
     // TODO: Edit a policy
@@ -86,14 +98,14 @@ class PasswordEnhancementsTest extends PasswordEnhancementsFunctionalTestBase {
   /**
    * Tests policy priorities.
    */
-  public function testPolicyPriorities() {
+  public function _testPolicyPriorities() {
 
   }
 
   /**
    * Tests settings administration.
    */
-  public function testSettingsAdministration() {
+  public function _testSettingsAdministration() {
     // TODO: Assure only valid data is accepted
 
     // TODO: Save configuration
