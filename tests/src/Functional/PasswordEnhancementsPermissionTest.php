@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\password_enhancements\Functional;
 
+use Drupal\Core\Discovery\YamlDiscovery;
 use Drupal\password_enhancements\Entity\Constraint;
 use Drupal\password_enhancements\Entity\Policy;
 use Drupal\user\Entity\Role;
@@ -105,17 +106,29 @@ class PasswordEnhancementsPermissionTest extends PasswordEnhancementsFunctionalT
   }
 
   /**
-   * Testing the access to the policy and constraint links.
+   * Testing the access to the config, policy and constraint links.
    */
   public function testLinks() {
     $this->drupalLogin($this->evaluatedUser);
-    $this->accessPages('policy', 'password_enhancements_policy', 200);
-    $this->accessPages('constraint', 'password_enhancements_constraint', 200);
+
+    $this->drupalGet('/admin/config/people/password-enhancements');
+    $status_code = $this->getSession()->getStatusCode();
+    $this->assertEquals('200', $status_code, "Got HTTP {$status_code}, expected HTTP 200.");
+
+    $this->accessPages('policy', $this->entityRoutes('password_enhancements_policy'), 200);
+    $this->accessPages('constraint', $this->entityRoutes('password_enhancements_constraint'), 200);
+
     $this->drupalLogout();
 
     $this->drupalLogin($this->defaultUser);
-    $this->accessPages('policy', 'password_enhancements_policy', 403);
-    $this->accessPages('constraint', 'password_enhancements_constraint', 403);
+
+    $this->drupalGet('/admin/config/people/password-enhancements');
+    $status_code = $this->getSession()->getStatusCode();
+    $this->assertEquals('403', $status_code, "Got HTTP {$status_code}, expected HTTP 403.");
+
+    $this->accessPages('policy', $this->entityRoutes('password_enhancements_policy'), 403);
+    $this->accessPages('constraint', $this->entityRoutes('password_enhancements_constraint') , 403);
+
     $this->drupalLogout();
   }
 
@@ -131,9 +144,8 @@ class PasswordEnhancementsPermissionTest extends PasswordEnhancementsFunctionalT
    *
    * @throws \Drupal\Core\Entity\EntityMalformedException
    */
-  public function accessPages(string $entity, string $entity_id, int $expected_status_code) {
-    $entityRoutes = $this->entityRoutes($entity_id);
-    foreach ($entityRoutes as $rel) {
+  public function accessPages(string $entity, array $entity_routes, int $expected_status_code) {
+    foreach ($entity_routes as $rel) {
       $url = $this->$entity->toUrl($rel)->toString();
       $this->drupalGet($url);
       $status_code = $this->getSession()->getStatusCode();
