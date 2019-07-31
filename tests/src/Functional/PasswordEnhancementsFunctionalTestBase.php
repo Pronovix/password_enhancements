@@ -4,14 +4,42 @@ namespace Drupal\Tests\password_enhancements\Functional;
 
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\Tests\password_enhancements\Traits\PasswordEnhancementsFunctionalTestTrait;
 
 /**
  * Defines base for the functional tests.
  */
 abstract class PasswordEnhancementsFunctionalTestBase extends BrowserTestBase {
 
-  use PasswordEnhancementsFunctionalTestTrait;
+  /**
+   * Translation manager service.
+   *
+   * @var \Drupal\Core\StringTranslation\TranslationManager
+   */
+  protected $translationManager;
+
+  /**
+   * WebAssert object.
+   *
+   * @var \Drupal\Tests\WebAssert
+   */
+  protected $webAssert;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp() {
+    parent::setUp();
+
+    $this->translationManager = $this->container->get('string_translation');
+    $this->webAssert = $this->assertSession();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function tearDown() {
+    parent::tearDown();
+  }
 
   /**
    * Assert Drupal status message.

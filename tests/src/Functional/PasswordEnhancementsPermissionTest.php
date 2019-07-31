@@ -136,8 +136,8 @@ class PasswordEnhancementsPermissionTest extends PasswordEnhancementsFunctionalT
    *
    * @param string $entity
    *  The entity variable.
-   * @param string $entity_id
-   *  The entity ID.
+   * @param array $entity_routes
+   *  The entity routes.
    * @param int $expected_status_code
    *  The expected status code.
    *
