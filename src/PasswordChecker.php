@@ -5,35 +5,35 @@ namespace Drupal\password_enhancements;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\password_enhancements\Entity\Policy;
-use Drupal\password_enhancements\Entity\PolicyInterface;
 use Drupal\user\UserInterface;
 
 /**
  * Defines a password checker service.
+ *
+ * @internal
  */
-class PasswordChecker {
+final class PasswordChecker {
 
   /**
    * The current user proxy.
    *
    * @var \Drupal\Core\Session\AccountProxyInterface
    */
-  protected $account;
+  private $account;
 
   /**
    * The time service.
    *
    * @var \Drupal\Component\Datetime\TimeInterface
    */
-  protected $time;
+  private $time;
 
   /**
    * User storage.
    *
    * @var \Drupal\user\UserStorageInterface
    */
-  protected $userStorage;
+  private $userStorage;
 
   /**
    * Constructs the password checker service.
@@ -57,7 +57,7 @@ class PasswordChecker {
   /**
    * Checks whether the password is expired for the current user or not.
    *
-   * @param \Drupal\password_enhancements\Entity\PolicyInterface $policy
+   * @param \Drupal\password_enhancements\PasswordPolicyInterface $policy
    *   Policy config entity.
    * @param \Drupal\user\UserInterface|null $user
    *   A user for which the password expiry should be checked, if not set it
@@ -66,7 +66,7 @@ class PasswordChecker {
    * @return bool
    *   TRUE if expired, FALSE otherwise.
    */
-  public function isExpired(PolicyInterface $policy, ?UserInterface $user = NULL): bool {
+  public function isExpired(PasswordPolicyInterface $policy, ?UserInterface $user = NULL): bool {
     // Load user if not given.
     if ($user === NULL) {
       $user = $this->userStorage->load($this->account->id());
@@ -75,13 +75,13 @@ class PasswordChecker {
     // Check password expiry.
     $expire_seconds = $policy->getExpireSeconds();
     $is_password_change_required = $user->get('password_enhancements_password_change_required')->getValue() ? (bool) $user->get('password_enhancements_password_change_required')->getValue()[0]['value'] : FALSE;
-    return $is_password_change_required || ($expire_seconds !== PolicyInterface::PASSWORD_NO_EXPIRY && (int) $user->get('password_enhancements_password_changed_date')->getValue()[0]['value'] < $this->time->getRequestTime() - $expire_seconds);
+    return $is_password_change_required || ($expire_seconds !== PasswordPolicyInterface::PASSWORD_NO_EXPIRY && (int) $user->get('password_enhancements_password_changed_date')->getValue()[0]['value'] < $this->time->getRequestTime() - $expire_seconds);
   }
 
   /**
    * Checks whether the password expiry warning message should be shown or not.
    *
-   * @param \Drupal\password_enhancements\Entity\PolicyInterface $policy
+   * @param \Drupal\password_enhancements\PasswordPolicyInterface $policy
    *   Policy config entity.
    * @param \Drupal\user\UserInterface|null $user
    *   A user for which the warning message should be shown or not.
@@ -89,13 +89,13 @@ class PasswordChecker {
    * @return bool
    *   TRUE to show the warning message, FALSE otherwise.
    */
-  public function showWarningMessage(PolicyInterface $policy, ?UserInterface $user = NULL): bool {
+  public function isWarningMessageNeeded(PasswordPolicyInterface $policy, ?UserInterface $user = NULL): bool {
     // Load user if not given.
     if ($user === NULL) {
       $user = $this->userStorage->load($this->account->id());
     }
     $expire_warn_seconds = $policy->getExpireWarnSeconds();
-    return $expire_warn_seconds !== Policy::PASSWORD_NO_WARNING && (int) $user->get('password_enhancements_password_changed_date')->getValue()[0]['value'] + $policy->getExpireSeconds() - $expire_warn_seconds < $this->time->getRequestTime();
+    return $expire_warn_seconds !== PasswordPolicyInterface::PASSWORD_NO_WARNING && (int) $user->get('password_enhancements_password_changed_date')->getValue()[0]['value'] + $policy->getExpireSeconds() - $expire_warn_seconds < $this->time->getRequestTime();
   }
 
 }

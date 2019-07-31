@@ -3,7 +3,6 @@
 namespace Drupal\password_enhancements\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Config\Entity\ConfigEntityStorageInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
@@ -31,26 +30,16 @@ class SettingsForm extends ConfigFormBase {
   const MINIMUM_LENGTH = 8;
 
   /**
-   * Password constraint entity storage.
-   *
-   * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface
-   */
-  protected $passwordConstraintEntityStorage;
-
-  /**
    * Constructs the settings form for a password constraint.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   Config factory.
-   * @param \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $password_constraint_entity_storage
-   *   Password constraint entity storage.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   Messenger.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ConfigEntityStorageInterface $password_constraint_entity_storage, MessengerInterface $messenger) {
+  public function __construct(ConfigFactoryInterface $config_factory, MessengerInterface $messenger) {
     parent::__construct($config_factory);
 
-    $this->passwordConstraintEntityStorage = $password_constraint_entity_storage;
     $this->messenger = $messenger;
   }
 
@@ -60,7 +49,6 @@ class SettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container): SettingsForm {
     return new static(
       $container->get('config.factory'),
-      $container->get('entity_type.manager')->getStorage('password_enhancements_constraint'),
       $container->get('messenger')
     );
   }

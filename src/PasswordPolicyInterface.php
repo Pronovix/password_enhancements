@@ -1,13 +1,13 @@
 <?php
 
-namespace Drupal\password_enhancements\Entity;
+namespace Drupal\password_enhancements;
 
-use Drupal\Core\Entity\EntityInterface;
+use Drupal\user\RoleInterface;
 
 /**
- * Defines required methods for the password policy config entity.
+ * Defines required methods for the password policy.
  */
-interface PolicyInterface extends EntityInterface {
+interface PasswordPolicyInterface {
 
   /**
    * Password with no expiry.
@@ -22,6 +22,20 @@ interface PolicyInterface extends EntityInterface {
    * @var int
    */
   const PASSWORD_NO_WARNING = 0;
+
+  /**
+   * Creates a Password Policy object from a Role.
+   *
+   * @param \Drupal\password_enhancements\PasswordConstraintPluginManager $constraint_plugin_manager
+   *   The password constraint plugin manager.
+   * @param \Drupal\user\RoleInterface $role
+   *   The role.
+   *
+   * @return \Drupal\password_enhancements\PasswordPolicyInterface|null
+   *   The password policy object initialized from the role, or NULL if the role
+   *   doesn't have password policy info.
+   */
+  public static function createFromRole(PasswordConstraintPluginManager $constraint_plugin_manager, RoleInterface $role): ?PasswordPolicyInterface;
 
   /**
    * Gets the expiry in days.
@@ -82,10 +96,10 @@ interface PolicyInterface extends EntityInterface {
   /**
    * Gets the related user role.
    *
-   * @return string
+   * @return \Drupal\user\RoleInterface
    *   The user role.
    */
-  public function getRole(): string;
+  public function getRole(): RoleInterface;
 
   /**
    * Sets the expiry in seconds.
@@ -93,13 +107,13 @@ interface PolicyInterface extends EntityInterface {
    * @param int $seconds
    *   The expiry in seconds.
    *
-   * @return \Drupal\password_enhancements\Entity\PolicyInterface
+   * @return \Drupal\password_enhancements\PasswordPolicyInterface
    *   The current object.
    *
-   * @throws \Drupal\password_enhancements\Entity\Exception\PolicyInvalidArgumentException
+   * @throws \Drupal\password_enhancements\Exception\PolicyInvalidArgumentException
    *   If the the given seconds value is negative.
    */
-  public function setExpireSeconds(int $seconds): PolicyInterface;
+  public function setExpireSeconds(int $seconds): PasswordPolicyInterface;
 
   /**
    * Sets how long before the warning message should be shown in seconds.
@@ -107,13 +121,13 @@ interface PolicyInterface extends EntityInterface {
    * @param int $seconds
    *   The seconds how long before the warning message should be shown.
    *
-   * @return \Drupal\password_enhancements\Entity\PolicyInterface
+   * @return \Drupal\password_enhancements\PasswordPolicyInterface
    *   The current object.
    *
-   * @throws \Drupal\password_enhancements\Entity\Exception\PolicyInvalidArgumentException
+   * @throws \Drupal\password_enhancements\Exception\PolicyInvalidArgumentException
    *   If the the given seconds value is negative.
    */
-  public function setExpireWarnSeconds(int $seconds): PolicyInterface;
+  public function setExpireWarnSeconds(int $seconds): PasswordPolicyInterface;
 
   /**
    * Sets expiry warning message.
@@ -121,10 +135,10 @@ interface PolicyInterface extends EntityInterface {
    * @param string|null $message
    *   The expiry warning message or NULL if none.
    *
-   * @return \Drupal\password_enhancements\Entity\PolicyInterface
+   * @return \Drupal\password_enhancements\PasswordPolicyInterface
    *   The current object.
    */
-  public function setExpiryWarningMessage(?string $message): PolicyInterface;
+  public function setExpiryWarningMessage(?string $message): PasswordPolicyInterface;
 
   /**
    * Sets the minimally required constraints.
@@ -132,34 +146,31 @@ interface PolicyInterface extends EntityInterface {
    * @param int $number
    *   The number of the minimally required constraints.
    *
-   * @return \Drupal\password_enhancements\Entity\PolicyInterface
+   * @return \Drupal\password_enhancements\PasswordPolicyInterface
    *   The current object.
    *
-   * @throws \Drupal\password_enhancements\Entity\Exception\PolicyInvalidArgumentException
+   * @throws \Drupal\password_enhancements\Exception\PolicyInvalidArgumentException
    *   If the given number is negative.
    */
-  public function setMinimumRequiredConstraints(int $number): PolicyInterface;
+  public function setMinimumRequiredConstraints(int $number): PasswordPolicyInterface;
 
   /**
-   * Sets the policy's priority.
+   * Returns a specific password constraint.
    *
-   * @param int $priority
-   *   The priority of the policy.
+   * @param string $constraint
+   *   The password constraint ID.
    *
-   * @return \Drupal\password_enhancements\Entity\PolicyInterface
-   *   The current object.
+   * @return \Drupal\password_enhancements\PasswordConstraintInterface
+   *   The password constraint object.
    */
-  public function setPriority(int $priority): PolicyInterface;
+  public function getConstraint($constraint): PasswordConstraintInterface;
 
   /**
-   * Sets the user role.
+   * Returns the password constraints for this policy.
    *
-   * @param string $role
-   *   The user role.
-   *
-   * @return \Drupal\password_enhancements\Entity\PolicyInterface
-   *   The current object.
+   * @return \Drupal\password_enhancements\PasswordConstraintPluginCollection
+   *   The password constraint plugin collection.
    */
-  public function setRole(string $role): PolicyInterface;
+  public function getConstraints(): PasswordConstraintPluginCollection;
 
 }

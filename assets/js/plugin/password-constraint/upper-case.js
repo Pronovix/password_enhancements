@@ -14,7 +14,7 @@
           detail: {
             type: 'upper_case',
             id: $field.attr('id'),
-            plugin: new UpperCase($field)
+            plugin: new UpperCasePlugin($field)
           }
         }));
       }
@@ -24,17 +24,17 @@
   /**
    * Constructs the upper-case constraint plugin.
    */
-  function UpperCase(field) {
+  function UpperCasePlugin(field) {
     PasswordEnhancementsMinimumCharacters.call(this, field);
   }
 
   // Inherit methods.
-  UpperCase.prototype = Object.create(PasswordEnhancementsMinimumCharacters.prototype);
+  UpperCasePlugin.prototype = Object.create(PasswordEnhancementsMinimumCharacters.prototype);
 
   /**
    * Overrides parent validate method.
    */
-  UpperCase.prototype.validate = function (value, settings) {
+  UpperCasePlugin.prototype.validate = function (value, settings) {
     // Get all upper-cased characters.
     var matches = value.match(/([A-Z])/g);
     var characters = '';
@@ -44,6 +44,5 @@
 
     return PasswordEnhancementsMinimumCharacters.prototype.validate.call(this, characters, settings);
   };
-
 
 })(jQuery);
