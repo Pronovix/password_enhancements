@@ -8,6 +8,7 @@ use Drupal\Core\Messenger\Messenger;
 use Drupal\password_enhancements\Entity\Constraint;
 use Drupal\password_enhancements\Entity\Policy;
 use Drupal\user\Entity\Role;
+use Drupal\user\Entity\User;
 
 
 /**
@@ -38,7 +39,6 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
    *
    * @var \Drupal\user\Entity\Role
    */
-
   protected $role;
 
   /**
@@ -74,16 +74,6 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
     ]);
     $this->role->save();
 
-    $this->policy = Policy::create([
-      'role' => $this->role->id(),
-      'minimumRequiredConstraints' => 1,
-      'expireSeconds' => 0,
-      'expireWarnSeconds' => 0,
-      'expiryWarningMessage' => 'Warning message for expiration',
-      'priority' => 1,
-      'status' => 'enabled',
-    ]);
-    $this->policy->save();
   }
 
   /**
@@ -94,19 +84,75 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
     parent::tearDown();
   }
 
-  public function testLowerCaseConstraint()
-  {
+  public function _testSettingsSave() {
     $this->drupalLogin($this->evaluatedUser);
 
-    // Create uppercase constraint
-    $this->drupalGet($this->policy->toUrl('collection')->toString());
+    $this->drupalGet('admin/config/people/password-enhancements');
     $page = $this->getSession()->getPage();
-    $page->clickLink('Manage constraints');
-    $this->createConstraint('lower_case', 'Add at least one lower-cased letter.', 'Add @minimum_characters more lower-cased letters.', [
+
+    $page->selectFieldOption('edit-constraint-update-effect', 'strikethrough');
+    $page->pressButton('Save configuration');
+    $this->assertStatusMessage($this->t('The configuration options have been saved.'), Messenger::TYPE_STATUS);
+  }
+
+  public function testRequirePasswordReset() {
+    $this->drupalLogin($this->evaluatedUser);
+
+    $this->drupalGet('admin/config/people/password-enhancements');
+    $page = $this->getSession()->getPage();
+
+    $page->checkField('edit-require-password-change');
+    $page->pressButton('Save configuration');
+    $this->assertStatusMessage($this->t('The configuration options have been saved.'), Messenger::TYPE_STATUS);
+
+    $this->drupalGet('admin/people/create');
+    $page = $this->getSession()->getPage();
+
+    $name = 'test_user_for_password_change';
+    $page->selectFieldOption('edit-roles-password-enhancements-test-role', $this->role->id());
+    $page->fillField('edit-name', $name);
+    $page->fillField('edit-pass-pass1', 'userpass');
+    $page->fillField('edit-pass-pass2', 'userpass');
+    $page->pressButton('Create new account');
+
+    $user = user_load_by_name($name);
+
+    $this->drupalLogout();
+
+    $this->drupalGet(user_pass_reset_url($user));
+
+    $page->pressButton('Log in');
+
+    $this->assertStatusMessage($this->t('Please change your password.'), Messenger::TYPE_STATUS);
+
+  }
+
+  /**
+   * @throws \Behat\Mink\Exception\ElementNotFoundException
+   * @throws \Drupal\Core\Entity\EntityMalformedException
+   */
+  public function _testConstraints() {
+    $this->drupalLogin($this->evaluatedUser);
+
+    $policy = Policy::create([
+      'role' => $this->role->id(),
+      'minimumRequiredConstraints' => 1,
+      'expireSeconds' => 0,
+      'expireWarnSeconds' => 0,
+      'expiryWarningMessage' => 'Warning message for expiration',
+      'priority' => 1,
+      'status' => 'enabled',
+    ]);
+    $policy->save();
+
+    // Create uppercase constraint
+    $this->createConstraint($policy,'lower_case', 1, 'Add at least one lower-cased letter.', 'Add @minimum_characters more lower-cased letters.', [
       'minimum_characters' => 3,
     ]);
-    $this->drupalGet($this->constraint->toUrl('collection')->toString());
+
+    // Create users
     $this->drupalGet('admin/people/create');
+    $page = $this->getSession()->getPage();
 
     // Create a new user where the password meets the lower-case requirements
     $this->createPasswordEnhancementUser($page, 'tEStPASSwORD', 'Created a new user account for', Messenger::TYPE_STATUS);
@@ -117,17 +163,16 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
     // Create a new user where the password needs at least one lower-case letter
     $this->createPasswordEnhancementUser($page, 'teSTPASSWORD', 'Add at least one lower-cased letter.', Messenger::TYPE_ERROR);
 
-    $this->deleteConstraint();
+    $this->deleteConstraint($policy);
 
-    // Create lower case constraint
-    $this->drupalGet($this->policy->toUrl('collection')->toString());
-    $page = $this->getSession()->getPage();
-    $page->clickLink('Manage constraints');
-    $this->createConstraint('upper_case', 'Add at least one upper-cased letter.', 'Add @minimum_characters more upper-cased letters.', [
+    // Create upper case constraint
+    $this->createConstraint($policy, 'upper_case', 1, 'Add at least one upper-cased letter.', 'Add @minimum_characters more upper-cased letters.', [
       'minimum_characters' => 3,
     ]);
-    $this->drupalGet($this->constraint->toUrl('collection')->toString());
+
+    // Create users
     $this->drupalGet('admin/people/create');
+    $page = $this->getSession()->getPage();
 
     // Create a new user where the password meets the upper-case requirements
     $this->createPasswordEnhancementUser($page, 'TesTpaSsword', 'Created a new user account for', Messenger::TYPE_STATUS);
@@ -138,17 +183,16 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
     // Create a new user where the password needs at least one upper-case letter
     $this->createPasswordEnhancementUser($page, 'TEstpassword', 'Add at least one upper-cased letter.', Messenger::TYPE_ERROR);
 
-    $this->deleteConstraint();
+    $this->deleteConstraint($policy);
 
     // Create number constraint
-    $this->drupalGet($this->policy->toUrl('collection')->toString());
-    $page = $this->getSession()->getPage();
-    $page->clickLink('Manage constraints');
-    $this->createConstraint('number', 'Add at least one number.', 'Add @minimum_characters more numbers.', [
+    $this->createConstraint($policy, 'number', 1, 'Add at least one number.', 'Add @minimum_characters more numbers.', [
       'minimum_characters' => 3,
     ]);
-    $this->drupalGet($this->constraint->toUrl('collection')->toString());
+
+    // Create users
     $this->drupalGet('admin/people/create');
+    $page = $this->getSession()->getPage();
 
     // Create a new user where the password meets the number requirements
     $this->createPasswordEnhancementUser($page, 'testpassword123', 'Created a new user account for', Messenger::TYPE_STATUS);
@@ -159,19 +203,18 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
     // Create a new user where the password needs at least one number
     $this->createPasswordEnhancementUser($page, 'testpassword12', 'Add at least one number.', Messenger::TYPE_ERROR);
 
-    $this->deleteConstraint();
+    $this->deleteConstraint($policy);
 
     // Create special character constraint
-    $this->drupalGet($this->policy->toUrl('collection')->toString());
-    $page = $this->getSession()->getPage();
-    $page->clickLink('Manage constraints');
-    $this->createConstraint('special_character', 'Add at least one special character.', 'Add @minimum_characters more special characters.', [
+    $this->createConstraint($policy, 'special_character', 1, 'Add at least one special character.', 'Add @minimum_characters more special characters.', [
       'minimum_characters' => 3,
       'use_custom_special_characters' => 1,
       'special_characters' => '&%@$;+'
     ]);
-    $this->drupalGet($this->constraint->toUrl('collection')->toString());
+
+    // Create users
     $this->drupalGet('admin/people/create');
+    $page = $this->getSession()->getPage();
 
     // Create a new user where the password meets the special character requirements
     $this->createPasswordEnhancementUser($page, 'tes&tpas;swor+d', 'Created a new user account for', Messenger::TYPE_STATUS);
@@ -184,6 +227,69 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
 
   }
 
+  public function _testMinimumRequiredConstraint() {
+    $this->drupalLogin($this->evaluatedUser);
+
+    // The minimum required constraints value will overrule the constraint's requirement value
+    $policy = Policy::create([
+      'role' => $this->role->id(),
+      'minimumRequiredConstraints' => 3,
+      'expireSeconds' => 0,
+      'expireWarnSeconds' => 0,
+      'expiryWarningMessage' => 'Warning message for expiration',
+      'priority' => 1,
+      'status' => 'enabled',
+    ]);
+    $policy->save();
+
+    $url = $policy->toUrl('collection')->toString();
+    $this->drupalGet($url);
+    $page = $this->getSession()->getPage();
+
+    // Create uppercase constraint
+    $this->createConstraint($policy,'lower_case', 1, 'Add at least one lower-cased letter.', 'Add @minimum_characters more lower-cased letters.', [
+      'minimum_characters' => 3,
+    ]);
+
+    // Create upper case constraint
+    $this->createConstraint($policy, 'upper_case', 1, 'Add at least one upper-cased letter.', 'Add @minimum_characters more upper-cased letters.', [
+      'minimum_characters' => 3,
+    ]);
+
+    // Create number constraint
+    $this->createConstraint($policy, 'number', 0, 'Add at least one number.', 'Add @minimum_characters more numbers.', [
+      'minimum_characters' => 1,
+    ]);
+
+    $url = $this->constraint->toUrl('collection')->toString();
+    $this->drupalGet($url);
+    $page = $this->getSession()->getPage();
+
+    // Create users
+    $this->drupalGet('admin/people/create');
+    $page = $this->getSession()->getPage();
+
+    // Create a new user where the password requirements are met
+    $this->createPasswordEnhancementUser($page, 'passWORD1', 'Created a new user account for', Messenger::TYPE_STATUS);
+
+    // Create a new user where the password requirements are not met
+    $this->createPasswordEnhancementUser($page, 'passWORD', 'Add at least one number.', Messenger::TYPE_ERROR);
+
+    // Create a new user where the password requirements are not met
+    $this->createPasswordEnhancementUser($page, 'password1', 'Add 3 more upper-cased letters.', Messenger::TYPE_ERROR);
+
+    // Create a new user where the password requirements are not met
+    $this->createPasswordEnhancementUser($page, 'password', 'Add 3 more upper-cased letters.', Messenger::TYPE_ERROR);
+  }
+
+  /**
+   * @param $policy
+   * @param $page
+   * @param string $password
+   * @param string $expected_message
+   * @param $message_type
+   * @throws \Behat\Mink\Exception\ElementHtmlException
+   */
   protected function createPasswordEnhancementUser($page, string $password, string $expected_message, $message_type) {
     $page->selectFieldOption('edit-roles-password-enhancements-test-role', $this->role->id());
     $page->fillField('edit-name', $this->randomMachineName(8));
@@ -193,13 +299,21 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
     $this->assertStatusMessage($this->t($expected_message), $message_type);
   }
 
-  protected function createConstraint(string $type, string $description_singular, string $description_plural, array $settings): void
-  {
+  /**
+   * @param $policy
+   * @param string $type
+   * @param int $required
+   * @param string $description_singular
+   * @param string $description_plural
+   * @param array $settings
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  protected function createConstraint($policy, string $type, int $required, string $description_singular, string $description_plural, array $settings): void {
     $this->constraint = Constraint::create([
       'id' => $this->randomMachineName(),
       'type' => $type,
-      'required' => 1,
-      'policy' => $this->policy->id(),
+      'required' => $required,
+      'policy' => $policy->id(),
       'descriptionSingular' => $description_singular,
       'descriptionPlural' => $description_plural,
       'status' => 'enabled',
@@ -208,8 +322,12 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
     $this->constraint->save();
   }
 
-  protected function deleteConstraint() {
-    $this->drupalGet($this->policy->toUrl('collection')->toString());
+  /**
+   * @throws \Behat\Mink\Exception\ElementNotFoundException
+   * @throws \Drupal\Core\Entity\EntityMalformedException
+   */
+  protected function deleteConstraint($policy) {
+    $this->drupalGet($policy->toUrl('collection')->toString());
     $page = $this->getSession()->getPage();
     $page->clickLink('Manage constraints');
     $page->clickLink('Delete');
