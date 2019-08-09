@@ -126,7 +126,7 @@ class PasswordEnhancementsPermissionTest extends PasswordEnhancementsFunctionalT
     $this->assertEquals('403', $status_code, "Got HTTP {$status_code}, expected HTTP 403.");
 
     $this->accessPages('policy', $this->entityRoutes('password_enhancements_policy'), 403);
-    $this->accessPages('constraint', $this->entityRoutes('password_enhancements_constraint') , 403);
+    $this->accessPages('constraint', $this->entityRoutes('password_enhancements_constraint'), 403);
 
     $this->drupalLogout();
   }

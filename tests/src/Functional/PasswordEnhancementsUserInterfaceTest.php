@@ -17,8 +17,7 @@ use Drupal\user\Entity\User;
  * @group password_enhancements
  * @group password_enhancements_permissions
  */
-class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunctionalTestBase
-{
+class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunctionalTestBase {
 
   /**
    * Evaluated user with permission to change settings.
@@ -42,13 +41,6 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
   protected $role;
 
   /**
-   * The policy.
-   *
-   * @var \Drupal\password_enhancements\Entity\Policy
-   */
-  protected $policy;
-
-  /**
    * The constraint.
    *
    * @var \Drupal\password_enhancements\Entity\Constraint
@@ -58,8 +50,7 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
   /**
    * {@inheritdoc}
    */
-  protected function setUp()
-  {
+  protected function setUp() {
     parent::setUp();
 
     $this->evaluatedUser = $this->createUser([
@@ -73,18 +64,22 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
       'label' => 'Password Enhancements Test Role',
     ]);
     $this->role->save();
-
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function tearDown()
-  {
+  protected function tearDown() {
     parent::tearDown();
   }
 
-  public function _testSettingsSave() {
+  /**
+   * Tests the settings save.
+   *
+   * @throws \Behat\Mink\Exception\ElementHtmlException
+   * @throws \Behat\Mink\Exception\ElementNotFoundException
+   */
+  public function testSettingsSave() {
     $this->drupalLogin($this->evaluatedUser);
 
     $this->drupalGet('admin/config/people/password-enhancements');
@@ -95,6 +90,12 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
     $this->assertStatusMessage($this->t('The configuration options have been saved.'), Messenger::TYPE_STATUS);
   }
 
+  /**
+   * Tests if user is redirected to the password reset page after login.
+   *
+   * @throws \Behat\Mink\Exception\ElementHtmlException
+   * @throws \Behat\Mink\Exception\ElementNotFoundException
+   */
   public function testRequirePasswordReset() {
     $this->drupalLogin($this->evaluatedUser);
 
@@ -128,10 +129,12 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
   }
 
   /**
+   * Tests user creations with specific constraints.
+   *
    * @throws \Behat\Mink\Exception\ElementNotFoundException
    * @throws \Drupal\Core\Entity\EntityMalformedException
    */
-  public function _testConstraints() {
+  public function testConstraints() {
     $this->drupalLogin($this->evaluatedUser);
 
     $policy = Policy::create([
@@ -146,7 +149,7 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
     $policy->save();
 
     // Create uppercase constraint
-    $this->createConstraint($policy,'lower_case', 1, 'Add at least one lower-cased letter.', 'Add @minimum_characters more lower-cased letters.', [
+    $this->createConstraint($policy, 'lower_case', 1, 'Add at least one lower-cased letter.', 'Add @minimum_characters more lower-cased letters.', [
       'minimum_characters' => 3,
     ]);
 
@@ -209,7 +212,7 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
     $this->createConstraint($policy, 'special_character', 1, 'Add at least one special character.', 'Add @minimum_characters more special characters.', [
       'minimum_characters' => 3,
       'use_custom_special_characters' => 1,
-      'special_characters' => '&%@$;+'
+      'special_characters' => '&%@$;+',
     ]);
 
     // Create users
@@ -227,7 +230,14 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
 
   }
 
-  public function _testMinimumRequiredConstraint() {
+  /**
+   * Tests the minimum required constraints setting.
+   *
+   * @throws \Behat\Mink\Exception\ElementHtmlException
+   * @throws \Drupal\Core\Entity\EntityMalformedException
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function testMinimumRequiredConstraint() {
     $this->drupalLogin($this->evaluatedUser);
 
     // The minimum required constraints value will overrule the constraint's requirement value
@@ -247,7 +257,7 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
     $page = $this->getSession()->getPage();
 
     // Create uppercase constraint
-    $this->createConstraint($policy,'lower_case', 1, 'Add at least one lower-cased letter.', 'Add @minimum_characters more lower-cased letters.', [
+    $this->createConstraint($policy, 'lower_case', 1, 'Add at least one lower-cased letter.', 'Add @minimum_characters more lower-cased letters.', [
       'minimum_characters' => 3,
     ]);
 
@@ -283,11 +293,14 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
   }
 
   /**
+   * Creates a user.
+   *
    * @param $policy
    * @param $page
    * @param string $password
    * @param string $expected_message
    * @param $message_type
+   *
    * @throws \Behat\Mink\Exception\ElementHtmlException
    */
   protected function createPasswordEnhancementUser($page, string $password, string $expected_message, $message_type) {
@@ -300,12 +313,15 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
   }
 
   /**
+   * Creates a constraint.
+   *
    * @param $policy
    * @param string $type
    * @param int $required
    * @param string $description_singular
    * @param string $description_plural
    * @param array $settings
+   *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   protected function createConstraint($policy, string $type, int $required, string $description_singular, string $description_plural, array $settings): void {
@@ -323,6 +339,8 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
   }
 
   /**
+   * Deletes a constraint.
+   *
    * @throws \Behat\Mink\Exception\ElementNotFoundException
    * @throws \Drupal\Core\Entity\EntityMalformedException
    */
