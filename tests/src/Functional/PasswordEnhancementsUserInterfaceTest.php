@@ -125,7 +125,6 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
     $page->pressButton('Log in');
 
     $this->assertStatusMessage($this->t('Please change your password.'), Messenger::TYPE_STATUS);
-
   }
 
   /**
@@ -311,7 +310,15 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
     $this->createPasswordEnhancementUser($page, 'password', 'Add 3 more upper-cased letters.', Messenger::TYPE_ERROR);
   }
 
-  public function testEditConstraint() {
+  /**
+   * Tests policy and constraint edit.
+   *
+   * @throws \Behat\Mink\Exception\ElementHtmlException
+   * @throws \Behat\Mink\Exception\ElementNotFoundException
+   * @throws \Drupal\Core\Entity\EntityMalformedException
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function testEditPolicyAndConstraint() {
     $this->drupalLogin($this->evaluatedUser);
 
     $policy = Policy::create([
@@ -324,6 +331,16 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
       'status' => 'enabled',
     ]);
     $policy->save();
+
+    $this->drupalGet($policy->toUrl('collection')->toString());
+    $page = $this->getSession()->getPage();
+    $page->clickLink('Edit');
+
+    // Note that the user role couldn't be edited eventhough there's a select field in the UI
+    $page->fillField('edit-minimumrequiredconstraints', '10');
+    $page->fillField('edit-priority', 2);
+    $page->pressButton('Save');
+    $this->assertStatusMessage($this->t('Policy for the %role role has been successfully updated.', ['%role' => $this->role->label()]), Messenger::TYPE_STATUS);
 
     // Create a constraint
     $this->createConstraint($policy, 'lower_case', 1, 'Add at least one lower-cased letter.', 'Add @minimum_characters more lower-cased letters.', [
