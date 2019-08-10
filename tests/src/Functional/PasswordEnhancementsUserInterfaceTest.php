@@ -129,7 +129,7 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
   }
 
   /**
-   * Tests user creations with specific constraints.
+   * Tests user creations with specific constraints and constraint deletion.
    *
    * @throws \Behat\Mink\Exception\ElementNotFoundException
    * @throws \Drupal\Core\Entity\EntityMalformedException
@@ -228,6 +228,25 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
     // Create a new user where the password needs at least one special character
     $this->createPasswordEnhancementUser($page, 'tes&tpas;sword', 'Add at least one special character.', Messenger::TYPE_ERROR);
 
+    $this->deleteConstraint($policy);
+
+    // Create special character constraint
+    $this->createConstraint($policy, 'minimum_length', 1, 'Add at least one character.', 'Add @minimum_characters more characters.', [
+      'minimum_characters' => 8,
+    ]);
+
+    // Create users
+    $this->drupalGet('admin/people/create');
+    $page = $this->getSession()->getPage();
+
+    // Create a new user where the password meets the special character requirements
+    $this->createPasswordEnhancementUser($page, 'testpassword', 'Created a new user account for', Messenger::TYPE_STATUS);
+
+    // Create a new user where the password doesn't have any special characters
+    $this->createPasswordEnhancementUser($page, 'testp', 'Add 3 more characters.', Messenger::TYPE_ERROR);
+
+    // Create a new user where the password needs at least one special character
+    $this->createPasswordEnhancementUser($page, 'testpas', 'Add at least one character.', Messenger::TYPE_ERROR);
   }
 
   /**
@@ -256,12 +275,12 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
     $this->drupalGet($url);
     $page = $this->getSession()->getPage();
 
-    // Create uppercase constraint
+    // Create lower-case constraint
     $this->createConstraint($policy, 'lower_case', 1, 'Add at least one lower-cased letter.', 'Add @minimum_characters more lower-cased letters.', [
       'minimum_characters' => 3,
     ]);
 
-    // Create upper case constraint
+    // Create upper-case constraint
     $this->createConstraint($policy, 'upper_case', 1, 'Add at least one upper-cased letter.', 'Add @minimum_characters more upper-cased letters.', [
       'minimum_characters' => 3,
     ]);
@@ -292,14 +311,59 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
     $this->createPasswordEnhancementUser($page, 'password', 'Add 3 more upper-cased letters.', Messenger::TYPE_ERROR);
   }
 
+  public function testEditConstraint() {
+    $this->drupalLogin($this->evaluatedUser);
+
+    $policy = Policy::create([
+      'role' => $this->role->id(),
+      'minimumRequiredConstraints' => 1,
+      'expireSeconds' => 0,
+      'expireWarnSeconds' => 0,
+      'expiryWarningMessage' => 'Warning message for expiration',
+      'priority' => 1,
+      'status' => 'enabled',
+    ]);
+    $policy->save();
+
+    // Create a constraint
+    $this->createConstraint($policy, 'lower_case', 1, 'Add at least one lower-cased letter.', 'Add @minimum_characters more lower-cased letters.', [
+      'minimum_characters' => 3,
+    ]);
+
+    $this->drupalGet($this->constraint->toUrl('collection')->toString());
+    $page = $this->getSession()->getPage();
+    $page->clickLink('Edit');
+
+    $description_singular = 'Add at least one upper-cased letter.';
+    $description_plural = 'Add @minimum_characters more upper-cased letters.';
+
+    // Note that the type couldn't be edited eventhough there's a select field in the UI
+    $page->uncheckField('edit-required');
+    $page->fillField('edit-descriptionsingular', $description_singular);
+    $page->fillField('edit-descriptionplural', $description_plural);
+    $page->fillField('edit-settings-minimum-characters', '4');
+    $page->pressButton('Save');
+    $this->assertStatusMessage($this->t('The constraint was successfully updated.'), Messenger::TYPE_STATUS);
+
+    $this->assertFieldByXPath('//table//tbody//tr[position()=1]//td[position()=2]', 'no');
+    $this->assertFieldByXPath('//table//tbody//tr[position()=1]//td[position()=3]', $description_singular);
+    $this->assertFieldByXPath('//table//tbody//tr[position()=1]//td[position()=4]', $description_plural);
+    $this->assertFieldByXPath('//table//tbody//tr[position()=1]//td[position()=5]', 'minimum_characters: 4');
+  }
+
   /**
    * Creates a user.
    *
    * @param $policy
+   *  The policy.
    * @param $page
+   *  The page.
    * @param string $password
+   *  User password.
    * @param string $expected_message
+   *  Expected message after submission.
    * @param $message_type
+   *  Message type.
    *
    * @throws \Behat\Mink\Exception\ElementHtmlException
    */
@@ -316,11 +380,17 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
    * Creates a constraint.
    *
    * @param $policy
+   *  The policy.
    * @param string $type
+   *  Policy type.
    * @param int $required
+   *  Is the constraint required.
    * @param string $description_singular
+   *  Singular description of the constraint.
    * @param string $description_plural
+   *  Plural description of the constraint.
    * @param array $settings
+   *  The contraint's settings array.
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
