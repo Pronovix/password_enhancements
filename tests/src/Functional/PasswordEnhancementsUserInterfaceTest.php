@@ -272,7 +272,6 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
 
     $url = $policy->toUrl('collection')->toString();
     $this->drupalGet($url);
-    $page = $this->getSession()->getPage();
 
     // Create lower-case constraint
     $this->createConstraint($policy, 'lower_case', 1, 'Add at least one lower-cased letter.', 'Add @minimum_characters more lower-cased letters.', [
@@ -291,7 +290,6 @@ class PasswordEnhancementsUserInterfaceTest extends PasswordEnhancementsFunction
 
     $url = $this->constraint->toUrl('collection')->toString();
     $this->drupalGet($url);
-    $page = $this->getSession()->getPage();
 
     // Create users
     $this->drupalGet('admin/people/create');
