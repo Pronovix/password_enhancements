@@ -5,10 +5,10 @@ namespace Drupal\password_enhancements\Access;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\password_enhancements\Entity\Storage\PolicyEntityStorageInterface;
-use Drupal\user\Entity\Role;
-use Drupal\user\RoleStorageInterface;
+use Drupal\password_enhancements\PasswordConstraintPluginManager;
+use Drupal\password_enhancements\PasswordPolicy;
 use Drupal\user\UserStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -18,20 +18,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class AccessControlHandler implements ContainerInjectionInterface {
 
   /**
-   * Policy entity storage.
-   *
-   * @var \Drupal\password_enhancements\Entity\Storage\PolicyEntityStorageInterface
-   */
-  protected $policyEntityStorage;
-
-  /**
-   * Role entity storage.
-   *
-   * @var \Drupal\user\RoleStorageInterface
-   */
-  protected $roleStorage;
-
-  /**
    * User entity storage.
    *
    * @var \Drupal\user\UserStorageInterface
@@ -39,19 +25,23 @@ class AccessControlHandler implements ContainerInjectionInterface {
   protected $userStorage;
 
   /**
+   * The constraint plugin manager.
+   *
+   * @var \Drupal\password_enhancements\PasswordConstraintPluginManager
+   */
+  protected $constraintPluginManager;
+
+  /**
    * Constructs the access control handler.
    *
-   * @param \Drupal\password_enhancements\Entity\Storage\PolicyEntityStorageInterface $policy_entity_storage
-   *   Policy entity storage.
    * @param \Drupal\user\UserStorageInterface $user_storage
-   *   User entity storage.
-   * @param \Drupal\user\RoleStorageInterface $role_storage
-   *   Role entity storage.
+   *   The user entity storage.
+   * @param \Drupal\password_enhancements\PasswordConstraintPluginManager $constraint_plugin_manager
+   *   The constraint plugin manager.
    */
-  public function __construct(PolicyEntityStorageInterface $policy_entity_storage, UserStorageInterface $user_storage, RoleStorageInterface $role_storage) {
-    $this->policyEntityStorage = $policy_entity_storage;
-    $this->roleStorage = $role_storage;
+  public function __construct(UserStorageInterface $user_storage, PasswordConstraintPluginManager $constraint_plugin_manager) {
     $this->userStorage = $user_storage;
+    $this->constraintPluginManager = $constraint_plugin_manager;
   }
 
   /**
@@ -59,9 +49,8 @@ class AccessControlHandler implements ContainerInjectionInterface {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity_type.manager')->getStorage('password_enhancements_policy'),
       $container->get('entity_type.manager')->getStorage('user'),
-      $container->get('entity_type.manager')->getStorage('user_role')
+      $container->get('plugin.manager.password_enhancements.constraint')
     );
   }
 
@@ -82,18 +71,36 @@ class AccessControlHandler implements ContainerInjectionInterface {
   }
 
   /**
-   * Checks whether the user can create any more policies or not.
+   * Check whether the given role can have one more given password constraint.
    *
+   * @param \Drupal\Core\Routing\RouteMatchInterface $current_route_match
+   *   The current route match service.
    * @param \Drupal\Core\Session\AccountInterface $current_user
    *   The current user.
    *
    * @return \Drupal\Core\Access\AccessResultInterface
    *   Access result.
    */
-  public function canCreatePolicy(AccountInterface $current_user): AccessResultInterface {
-    $policies = $this->policyEntityStorage->getQuery()->count()->execute();
-    $roles = $this->roleStorage->getQuery()->condition('id', Role::ANONYMOUS_ID, '<>')->count()->execute();
-    return AccessResult::allowedIf($policies < $roles)->setCacheMaxAge(0);
+  public function hasConstraintAddAccess(RouteMatchInterface $current_route_match, AccountInterface $current_user): AccessResultInterface {
+    $allowed = $current_user->hasPermission('administer user password enhancements settings');
+    $constraint_type = $current_route_match->getParameter('password_constraint');
+    $policy = PasswordPolicy::createFromRole($this->constraintPluginManager, $current_route_match->getParameter('user_role'));
+    // User can add the given constraint to the given role with a policy when:
+    // - the constraint type is not unique,
+    // - OR the policy doesn't have this type of a constraint yet.
+    if ($policy) {
+      $allowed = TRUE;
+      if ($constraint_type['unique']) {
+        /** @var \Drupal\password_enhancements\Plugin\PasswordConstraint\PasswordConstraintBase $policy_constraint */
+        foreach ($policy->getConstraints() as $policy_constraint) {
+          if ($policy_constraint->getPluginId() === $constraint_type['id']) {
+            $allowed = FALSE;
+            break;
+          }
+        }
+      }
+    }
+    return AccessResult::allowedIf($allowed);
   }
 
 }

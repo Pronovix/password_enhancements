@@ -9,6 +9,7 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\password_enhancements\PasswordChecker;
+use Drupal\password_enhancements\PasswordPolicyManagerService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -23,42 +24,42 @@ final class InitSubscriber implements EventSubscriberInterface {
    *
    * @var \Drupal\Core\Session\AccountProxyInterface
    */
-  protected $account;
+  private $account;
 
   /**
    * Date formatter service.
    *
    * @var \Drupal\Core\Datetime\DateFormatterInterface
    */
-  protected $dateFormatter;
+  private $dateFormatter;
 
   /**
    * Messenger service.
    *
    * @var \Drupal\Core\Messenger\MessengerInterface
    */
-  protected $messenger;
+  private $messenger;
 
   /**
    * Password checker service.
    *
    * @var \Drupal\password_enhancements\PasswordChecker
    */
-  protected $passwordChecker;
-
-  /**
-   * Policy storage.
-   *
-   * @var \Drupal\password_enhancements\Entity\Storage\PolicyEntityStorageInterface
-   */
-  protected $policyStorage;
+  private $passwordChecker;
 
   /**
    * User storage.
    *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  protected $userStorage;
+  private $userStorage;
+
+  /**
+   * The password policy manager.
+   *
+   * @var \Drupal\password_enhancements\PasswordPolicyManagerService
+   */
+  private $policyManager;
 
   /**
    * Initializes the init subscriber.
@@ -73,17 +74,19 @@ final class InitSubscriber implements EventSubscriberInterface {
    *   Messenger service.
    * @param \Drupal\password_enhancements\PasswordChecker $password_checker
    *   Password checker service.
+   * @param \Drupal\password_enhancements\PasswordPolicyManagerService $policy_manager
+   *   The password policy manager.
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(AccountProxyInterface $account, DateFormatterInterface $date_formatter, EntityTypeManagerInterface $entity_type_manager, MessengerInterface $messenger, PasswordChecker $password_checker) {
+  public function __construct(AccountProxyInterface $account, DateFormatterInterface $date_formatter, EntityTypeManagerInterface $entity_type_manager, MessengerInterface $messenger, PasswordChecker $password_checker, PasswordPolicyManagerService $policy_manager) {
     $this->account = $account;
     $this->dateFormatter = $date_formatter;
     $this->messenger = $messenger;
     $this->passwordChecker = $password_checker;
-    $this->policyStorage = $entity_type_manager->getStorage('password_enhancements_policy');
     $this->userStorage = $entity_type_manager->getStorage('user');
+    $this->policyManager = $policy_manager;
   }
 
   /**
@@ -114,7 +117,7 @@ final class InitSubscriber implements EventSubscriberInterface {
    */
   public function checkRequiredPasswordChange(GetResponseEvent $event): void {
     if ($event->isMasterRequest()) {
-      $policy = $this->policyStorage->loadByRoleAndPriority($this->account->getRoles());
+      $policy = $this->policyManager->loadPolicyByRoles($this->account->getRoles());
       if ($policy !== NULL) {
         /** @var \Drupal\user\UserInterface $user */
         $user = $this->userStorage->load($this->account->id());
@@ -138,13 +141,13 @@ final class InitSubscriber implements EventSubscriberInterface {
    */
   public function passwordChangeNotification(GetResponseEvent $event): void {
     if ($event->isMasterRequest() && Url::fromRoute('password_enhancements.password_change')->toString() !== $event->getRequest()->getPathInfo()) {
-      $policy = $this->policyStorage->loadByRoleAndPriority($this->account->getRoles());
-      if ($policy !== NULL && $this->passwordChecker->showWarningMessage($policy)) {
+      $policy = $this->policyManager->loadPolicyByRoles($this->account->getRoles());
+      if ($policy !== NULL && $this->passwordChecker->isWarningMessageNeeded($policy)) {
         /** @var \Drupal\user\UserInterface $user */
         $user = $this->userStorage->load($this->account->id());
         $this->messenger->addWarning(new FormattableMarkup($policy->getExpiryWarningMessage(), [
           '@date_time' => $this->dateFormatter->format($user->get('password_enhancements_password_changed_date')->getValue()[0]['value'] + $policy->getExpireSeconds(), 'password_enhancements_date_format'),
-          '@url' => Url::fromRoute('entity.user.edit_form', ['user' => $user->id()])->toString(),
+          '@url' => $user->toUrl('edit-form')->toString(),
         ]));
       }
     }

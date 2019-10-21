@@ -50,7 +50,7 @@ If your module's name is "my_module", you find a `my_module_module_php:latest` i
 
 ![Registering module specific PHP interpreter](images/phpcs_php_interpreter_registration.png)
 
-2. Follow the steps from ["PHP Code Sniffer > Configure a PHP Code Sniffer script associated with a PHP interpreter "](https://www.jetbrains.com/help/phpstorm/using-php-code-sniffer.html) section and select the "Interpreter: my_module_module_php:latest" PHP interpreter that you registered in the previous steps and *click on the Apply button**[]: 
+2. Follow the steps from ["PHP Code Sniffer > Configure a PHP Code Sniffer script associated with a PHP interpreter "](https://www.jetbrains.com/help/phpstorm/using-php-code-sniffer.html) section and select the "Interpreter: my_module_module_php:latest" PHP interpreter that you registered in the previous steps and *click on the Apply button**[]:
 
 ![Code sniffer registration](images/phpcs_code_sniffer_registration.png)
 

@@ -1,6 +1,6 @@
 /**
  * @file
- * Password constraint special-character validator plugin.
+ * Password constraint special character validator plugin.
  */
 
 (function ($) {
@@ -28,7 +28,7 @@
   };
 
   /**
-   * Constructs the special_character constraint plugin.
+   * Constructs the special character constraint plugin.
    */
   function SpecialCharacterPlugin(field) {
     PasswordEnhancementsMinimumCharacters.call(this, field);
@@ -42,7 +42,7 @@
    */
   SpecialCharacterPlugin.prototype.validate = function (value, settings) {
     var regex;
-    if (settings.hasOwnProperty('use_custom_special_characters') && parseInt(settings['use_custom_special_characters']) === 1) {
+    if (settings.hasOwnProperty('use_custom_special_characters') && settings['use_custom_special_characters']) {
       var specialCharacters = settings['special_characters'].replace(/[-[\]{}()*+!<=:?.\/\\^$|#\s,]/g, '\\$&');
       regex = new RegExp('([' + specialCharacters + '])', 'g')
     }
@@ -57,9 +57,7 @@
       characters = matches.join('');
     }
 
-    var isValid = PasswordEnhancementsMinimumCharacters.prototype.validate.call(this, characters, settings, true);
-
-    var characterNumber = settings[this.settingName] - value.length;
+    var characterNumber = settings[this.settingName] - characters.length;
     var specialCharactersMarkup = '<span data-setting="special_characters">' + settings['special_characters'] + '</span>';
     var message = characterNumber > 1
       ? settings['descriptionPlural']
@@ -68,11 +66,7 @@
       : settings['descriptionSingular']
         .replace('@special_characters', specialCharactersMarkup);
 
-    if (this.field.html() !== message) {
-      this.field.html(message);
-    }
-
-    return isValid;
+    return PasswordEnhancementsMinimumCharacters.prototype.validate.call(this, characters, settings, message);
   };
 
 })(jQuery);
